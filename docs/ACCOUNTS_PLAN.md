@@ -201,10 +201,11 @@ Google Drive): each value is moved into the Worker secrets and
 **Phase 0: the blocker.** Must be done before any public sign-up and well
 before downloads start on 2026-12-31 (Product Hunt).
 - Add Resend's DNS records (Your step, `visuals\emails_1.docx` Part 1).
-  Checked 2026-11-25: not there yet, so confirmation and reset emails
-  reach only the three verified addresses.
-- Switch the email provider to Resend, then send one test to a real
-  outside address.
+  Done 2026-11-25: all five records checked on tizcat.com's own
+  nameservers, and Resend shows tizcat.com as Verified.
+- Switch the email provider to Resend: done 2026-11-25 (a check email to
+  Resend's test address was delivered). Still to do: one test to a real
+  outside address, sent only after you say yes.
 
 **Phase 1: a solid email-and-password account.**
 Turnstile on all four forms, username, change email, sign out everywhere,

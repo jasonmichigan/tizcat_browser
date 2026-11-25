@@ -10,7 +10,7 @@
     "sync": true
   },
   "email": {
-    "provider": "cloudflare",
+    "provider": "resend",
     "from": { "name": "TizCat", "address": "account@tizcat.com" }
   },
   "ads": {

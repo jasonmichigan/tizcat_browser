@@ -207,9 +207,14 @@ milliseconds, so one deleted and made again never repeats a version.
   keep their data and upload it again after signing in. Clearing the synced
   copy from the account page never deletes anything in a TizCat (an empty
   server is a fresh start, not "everything was deleted").
-- **Email** (`config.json` "email"): `provider` is `cloudflare` (free; only
-  addresses verified in Email Routing receive mail, today the two team
-  Gmails), `resend` or `brevo`. To let anyone sign up: make a free Resend
+- **Email** (`config.json` "email"): `provider` is `resend` since
+  2026-11-25 (tizcat.com verified in Resend, us-east-1; free: 100 emails a
+  day, 3,000 a month). The other choices are `cloudflare` (free; only
+  addresses verified in Email Routing receive mail) and `brevo`. The Worker's
+  key is a sending-only Resend key limited to tizcat.com (secret
+  `RESEND_API_KEY` on tizcat-account). If the tizcat.com domain is ever
+  removed from Resend and added again, it gets a new ID, so that key must be
+  made again. To set up a provider from scratch: make a free Resend
   account (100 emails a day) or Brevo account (300 a day), add tizcat.com
   there and put the DNS records it shows into Cloudflare (Resend uses a
   `send` subdomain and DKIM, so the inbound mail records stay), create an
