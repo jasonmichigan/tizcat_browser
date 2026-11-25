@@ -204,8 +204,9 @@ before downloads start on 2026-12-31 (Product Hunt).
   Done 2026-11-25: all five records checked on tizcat.com's own
   nameservers, and Resend shows tizcat.com as Verified.
 - Switch the email provider to Resend: done 2026-11-25 (a check email to
-  Resend's test address was delivered). Still to do: one test to a real
-  outside address, sent only after you say yes.
+  Resend's test address was delivered). A test confirmation email then
+  reached a Yahoo inbox (Yahoo had refused tizcat.com mail without DKIM on
+  2026-11-18).
 
 **Phase 1: a solid email-and-password account.**
 Turnstile on all four forms, username, change email, sign out everywhere,
