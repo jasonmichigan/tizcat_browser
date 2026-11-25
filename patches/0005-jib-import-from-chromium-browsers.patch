@@ -1,0 +1,874 @@
+diff --git a/chrome/browser/importer/importer_list.cc b/chrome/browser/importer/importer_list.cc
+index 1d7c9bca11..9625551486 100644
+--- a/chrome/browser/importer/importer_list.cc
++++ b/chrome/browser/importer/importer_list.cc
+@@ -24,6 +24,17 @@
+ #endif
+ 
+ #if BUILDFLAG(IS_WIN)
++#include <optional>
++#include <string>
++#include <utility>
++
++#include "base/base_paths_win.h"
++#include "base/files/file_path.h"
++#include "base/files/file_util.h"
++#include "base/json/json_reader.h"
++#include "base/path_service.h"
++#include "base/strings/utf_string_conversions.h"
++#include "base/values.h"
+ #include "chrome/common/importer/edge_importer_utils_win.h"
+ #endif
+ 
+@@ -69,6 +80,108 @@ void DetectBuiltinWindowsProfiles(
+   }
+ }
+ 
++// Jib: whether a Chromium-style profile folder has anything to import.
++bool HasChromiumProfileData(const base::FilePath& profile) {
++  return base::PathExists(profile.Append(FILE_PATH_LITERAL("Bookmarks"))) ||
++         base::PathExists(profile.Append(FILE_PATH_LITERAL("History"))) ||
++         base::PathExists(profile.Append(FILE_PATH_LITERAL("Login Data")));
++}
++
++// Jib: the Chromium-based browsers installed for this Windows user, one
++// entry per profile with something in it, named as Brave names them: the
++// browser and the profile's name ("Google Chrome Work", "Microsoft Edge
++// Profile 1"), and Opera alone, as it has one profile. Imported by
++// ChromiumImporter.
++void DetectChromiumProfiles(
++    std::vector<user_data_importer::SourceProfile>* profiles) {
++  base::ScopedBlockingCall scoped_blocking_call(FROM_HERE,
++                                                base::BlockingType::MAY_BLOCK);
++  base::FilePath local;
++  base::FilePath roaming;
++  if (!base::PathService::Get(base::DIR_LOCAL_APP_DATA, &local) ||
++      !base::PathService::Get(base::DIR_ROAMING_APP_DATA, &roaming)) {
++    return;
++  }
++  // Each keeps a "User Data" folder: its Local State, and a folder per
++  // profile. Opera's is its one profile, shown without a name.
++  struct Browser {
++    const char16_t* name;
++    base::FilePath user_data;
++    bool one_profile = false;
++  };
++  const Browser browsers[] = {
++      {u"Google Chrome", local.Append(L"Google\\Chrome\\User Data")},
++      {u"Google Chrome Beta", local.Append(L"Google\\Chrome Beta\\User Data")},
++      {u"Google Chrome Dev", local.Append(L"Google\\Chrome Dev\\User Data")},
++      {u"Google Chrome Canary",
++       local.Append(L"Google\\Chrome SxS\\User Data")},
++      {u"Microsoft Edge", local.Append(L"Microsoft\\Edge\\User Data")},
++      {u"Brave", local.Append(L"BraveSoftware\\Brave-Browser\\User Data")},
++      {u"Opera", roaming.Append(L"Opera Software\\Opera Stable"), true},
++      {u"Opera GX", roaming.Append(L"Opera Software\\Opera GX Stable"), true},
++      {u"Vivaldi", local.Append(L"Vivaldi\\User Data")},
++      {u"Perplexity Comet", local.Append(L"Perplexity\\Comet\\User Data")},
++      {u"Yandex Browser", local.Append(L"Yandex\\YandexBrowser\\User Data")},
++      {u"Chromium", local.Append(L"Chromium\\User Data")},
++  };
++  for (const auto& [browser, user_data, one_profile] : browsers) {
++    if (!base::DirectoryExists(user_data)) {
++      continue;
++    }
++    // Its profiles, under the names the browser shows, from its Local State.
++    std::vector<std::pair<base::FilePath, std::u16string>> found;
++    std::string json;
++    if (base::ReadFileToString(user_data.Append(L"Local State"), &json)) {
++      std::optional<base::DictValue> state =
++          base::JSONReader::ReadDict(json, base::JSON_PARSE_RFC);
++      const base::DictValue* cache =
++          state ? state->FindDictByDottedPath("profile.info_cache") : nullptr;
++      if (cache) {
++        for (const auto [dir, info] : *cache) {
++          const base::FilePath path = user_data.AppendASCII(dir);
++          if (!HasChromiumProfileData(path)) {
++            continue;
++          }
++          const std::string* name =
++              info.is_dict() ? info.GetDict().FindString("name") : nullptr;
++          found.emplace_back(path, base::UTF8ToUTF16(name ? *name : dir));
++        }
++      }
++    }
++    // Opera lists no profiles: its one profile is in "Default", or (older
++    // versions) in the folder itself.
++    if (one_profile) {
++      found.clear();
++    }
++    if (found.empty()) {
++      for (const base::FilePath& path :
++           {user_data.Append(L"Default"), user_data}) {
++        if (HasChromiumProfileData(path)) {
++          found.emplace_back(path, std::u16string());
++          break;
++        }
++      }
++    }
++    for (const auto& [path, profile_name] : found) {
++      user_data_importer::SourceProfile source;
++      source.importer_name = browser;
++      if (!one_profile && !profile_name.empty()) {
++        source.importer_name += u" " + profile_name;
++      }
++      source.importer_type = user_data_importer::TYPE_CHROMIUM;
++      source.source_path = path;
++      source.app_path = user_data;  // Where its Local State is.
++      source.profile = profile_name;
++      source.services_supported = user_data_importer::HISTORY |
++                                  user_data_importer::FAVORITES |
++                                  user_data_importer::PASSWORDS |
++                                  user_data_importer::SEARCH_ENGINES |
++                                  user_data_importer::AUTOFILL_FORM_DATA;
++      profiles->push_back(source);
++    }
++  }
++}
++
+ #endif  // BUILDFLAG(IS_WIN)
+ 
+ #if BUILDFLAG(IS_MAC)
+@@ -168,6 +281,9 @@ std::vector<user_data_importer::SourceProfile> DetectSourceProfilesWorker(
+   // The first run import will automatically take settings from the first
+   // profile detected, which should be the user's current default.
+ #if BUILDFLAG(IS_WIN)
++  // Jib: the Chromium-based browsers first, so Google Chrome, where most
++  // people come from, is the one already chosen in the import dialog.
++  DetectChromiumProfiles(&profiles);
+   if (shell_integration::IsFirefoxDefaultBrowser()) {
+     DetectFirefoxProfiles(locale, &profiles);
+     DetectBuiltinWindowsProfiles(&profiles);
+diff --git a/chrome/browser/importer/importer_uma.cc b/chrome/browser/importer/importer_uma.cc
+index d50675a79e..188c708968 100644
+--- a/chrome/browser/importer/importer_uma.cc
++++ b/chrome/browser/importer/importer_uma.cc
+@@ -47,6 +47,9 @@ void LogImporterUseToMetrics(const std::string& metric_postfix,
+     case user_data_importer::TYPE_EDGE:
+       metrics_type = IMPORTER_METRICS_EDGE;
+       break;
++    case user_data_importer::TYPE_CHROMIUM:  // Jib: no bucket of its own.
++      metrics_type = IMPORTER_METRICS_UNKNOWN;
++      break;
+ #endif
+     case user_data_importer::TYPE_FIREFOX:
+       metrics_type = IMPORTER_METRICS_FIREFOX3;
+diff --git a/chrome/common/importer/profile_import_process_param_traits_macros.h b/chrome/common/importer/profile_import_process_param_traits_macros.h
+index b19a5aa8ce..b21c6f12be 100644
+--- a/chrome/common/importer/profile_import_process_param_traits_macros.h
++++ b/chrome/common/importer/profile_import_process_param_traits_macros.h
+@@ -23,7 +23,7 @@
+ #if BUILDFLAG(IS_WIN)
+ IPC_ENUM_TRAITS_MIN_MAX_VALUE(user_data_importer::ImporterType,
+                               user_data_importer::TYPE_UNKNOWN,
+-                              user_data_importer::TYPE_EDGE)
++                              user_data_importer::TYPE_CHROMIUM)  // Jib
+ #else
+ IPC_ENUM_TRAITS_MIN_MAX_VALUE(user_data_importer::ImporterType,
+                               user_data_importer::TYPE_UNKNOWN,
+diff --git a/chrome/utility/BUILD.gn b/chrome/utility/BUILD.gn
+index e5b851a44d..8628aff70a 100644
+--- a/chrome/utility/BUILD.gn
++++ b/chrome/utility/BUILD.gn
+@@ -129,6 +129,9 @@ static_library("utility") {
+     }
+     if (is_win) {
+       sources += [
++        # Jib: imports from other Chromium-based browsers.
++        "importer/chromium_importer_win.cc",
++        "importer/chromium_importer_win.h",
+         "importer/edge_database_reader_win.cc",
+         "importer/edge_database_reader_win.h",
+         "importer/edge_importer_win.cc",
+@@ -139,7 +142,10 @@ static_library("utility") {
+         "importer/nss_decryptor_win.h",
+       ]
+ 
+-      deps += [ "//services/proxy_resolver_win" ]
++      deps += [
++        "//crypto",  # Jib: ChromiumImporter decrypts saved passwords.
++        "//services/proxy_resolver_win",
++      ]
+     }
+     deps += [
+       "//chrome/common:mojo_bindings",
+diff --git a/chrome/utility/importer/chromium_importer_win.cc b/chrome/utility/importer/chromium_importer_win.cc
+new file mode 100644
+index 0000000000..2d4312fc23
+--- /dev/null
++++ b/chrome/utility/importer/chromium_importer_win.cc
+@@ -0,0 +1,569 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifdef UNSAFE_BUFFERS_BUILD
++// Jib: Windows' DPAPI hands back a raw buffer.
++#pragma allow_unsafe_buffers
++#endif
++
++#include "chrome/utility/importer/chromium_importer_win.h"
++
++#include <windows.h>
++
++#include <wincrypt.h>
++
++#include <algorithm>
++#include <map>
++#include <optional>
++#include <set>
++#include <tuple>
++#include <utility>
++#include <vector>
++
++#include "base/base64.h"
++#include "base/containers/span.h"
++#include "base/files/file_util.h"
++#include "base/json/json_reader.h"
++#include "base/strings/string_number_conversions.h"
++#include "base/strings/string_util.h"
++#include "base/strings/utf_string_conversions.h"
++#include "base/time/time.h"
++#include "base/values.h"
++#include "chrome/common/importer/importer_autofill_form_data_entry.h"
++#include "chrome/common/importer/importer_bridge.h"
++#include "components/favicon_base/favicon_usage_data.h"
++#include "components/user_data_importer/common/imported_bookmark_entry.h"
++#include "components/user_data_importer/common/importer_data_types.h"
++#include "components/user_data_importer/common/importer_url_row.h"
++#include "components/user_data_importer/content/favicon_reencode.h"
++#include "crypto/aead.h"
++#include "sql/database.h"
++#include "sql/statement.h"
++#include "url/gurl.h"
++
++namespace {
++
++// sql::Database tags must be on a list generated from the metrics files, and
++// adding one would rebuild every file that opens a database. The tag only
++// names metrics, which TizCat does not send, so the Firefox importer's is
++// reused.
++inline constexpr sql::Database::Tag kDatabaseTag{"FirefoxImporter"};
++
++// Chromium keeps most times as microseconds since 1601 (Windows' epoch).
++base::Time FromChromiumTime(int64_t microseconds) {
++  if (microseconds <= 0) {
++    return base::Time();
++  }
++  return base::Time::FromDeltaSinceWindowsEpoch(
++      base::Microseconds(microseconds));
++}
++
++bool CanImportURL(const GURL& url) {
++  return url.is_valid() && url.SchemeIsHTTPOrHTTPS();
++}
++
++// Undoes Windows' per-user encryption (DPAPI). Only this Windows user can.
++std::optional<std::string> Unprotect(std::string_view data) {
++  DATA_BLOB in = {static_cast<DWORD>(data.size()),
++                  reinterpret_cast<BYTE*>(const_cast<char*>(data.data()))};
++  DATA_BLOB out = {};
++  if (!CryptUnprotectData(&in, nullptr, nullptr, nullptr, nullptr,
++                          CRYPTPROTECT_UI_FORBIDDEN, &out)) {
++    return std::nullopt;
++  }
++  std::string result(reinterpret_cast<const char*>(out.pbData), out.cbData);
++  SecureZeroMemory(out.pbData, out.cbData);
++  LocalFree(out.pbData);
++  return result;
++}
++
++// The key a Chromium browser encrypts saved passwords with. It is kept in
++// the browser's Local State, itself encrypted with DPAPI.
++std::optional<std::string> LoadPasswordKey(const base::FilePath& local_state) {
++  std::string json;
++  if (!base::ReadFileToString(local_state, &json)) {
++    return std::nullopt;
++  }
++  std::optional<base::DictValue> state =
++      base::JSONReader::ReadDict(json, base::JSON_PARSE_RFC);
++  if (!state) {
++    return std::nullopt;
++  }
++  const std::string* encoded =
++      state->FindStringByDottedPath("os_crypt.encrypted_key");
++  std::string wrapped;
++  if (!encoded || !base::Base64Decode(*encoded, &wrapped) ||
++      !wrapped.starts_with("DPAPI")) {
++    return std::nullopt;
++  }
++  std::optional<std::string> key =
++      Unprotect(std::string_view(wrapped).substr(5));
++  if (!key || key->size() != 32) {
++    return std::nullopt;
++  }
++  return key;
++}
++
++// A saved password as Chromium stores it:
++//  - "v10" (or "v11"): AES-256-GCM with the Local State key; a 12-byte nonce
++//    follows the prefix and the 16-byte tag ends it.
++//  - "v20": Google Chrome's app-bound encryption, which only Chrome itself
++//    can undo. Those passwords are left out.
++//  - anything else: an older value, encrypted with DPAPI directly.
++std::optional<std::u16string> DecryptPassword(
++    std::string_view value,
++    const std::optional<std::string>& key) {
++  if (value.empty()) {
++    return std::u16string();
++  }
++  if (value.starts_with("v10") || value.starts_with("v11")) {
++    if (!key || value.size() < 3 + 12 + 16) {
++      return std::nullopt;
++    }
++    std::optional<std::vector<uint8_t>> plain = crypto::aead::Open(
++        crypto::aead::AES_256_GCM, base::as_byte_span(*key),
++        base::as_byte_span(value.substr(3 + 12)),
++        base::as_byte_span(value.substr(3, 12)),
++        base::span<const uint8_t>());
++    if (!plain) {
++      return std::nullopt;
++    }
++    std::u16string password =
++        base::UTF8ToUTF16(std::string(plain->begin(), plain->end()));
++    std::ranges::fill(*plain, 0);
++    return password;
++  }
++  if (value.starts_with("v2")) {
++    return std::nullopt;
++  }
++  std::optional<std::string> plain = Unprotect(value);
++  if (!plain) {
++    return std::nullopt;
++  }
++  std::u16string password = base::UTF8ToUTF16(*plain);
++  std::ranges::fill(*plain, '\0');
++  return password;
++}
++
++// Adds the bookmarks under `node` (a folder in a Bookmarks file) to `out`.
++// Folders with something in them are given by their entries' `path`; an
++// empty folder is an entry of its own.
++void AddBookmarks(const base::DictValue& node,
++                  bool in_toolbar,
++                  std::vector<std::u16string>* path,
++                  std::set<std::tuple<std::vector<std::u16string>,
++                                      std::u16string,
++                                      std::string>>* seen,
++                  std::vector<user_data_importer::ImportedBookmarkEntry>* out) {
++  const base::ListValue* children = node.FindList("children");
++  if (!children) {
++    return;
++  }
++  for (const base::Value& child_value : *children) {
++    const base::DictValue* child = child_value.GetIfDict();
++    if (!child) {
++      continue;
++    }
++    const std::string* type = child->FindString("type");
++    const std::string* name = child->FindString("name");
++    const std::string* added = child->FindString("date_added");
++    int64_t added_us = 0;
++    if (added) {
++      base::StringToInt64(*added, &added_us);
++    }
++    user_data_importer::ImportedBookmarkEntry entry;
++    entry.in_toolbar = in_toolbar;
++    entry.path = *path;
++    entry.title = name ? base::UTF8ToUTF16(*name) : std::u16string();
++    // A bookmark with no date is dated now, as one added by hand would be.
++    entry.creation_time =
++        added_us > 0 ? FromChromiumTime(added_us) : base::Time::Now();
++    if (type && *type == "url") {
++      const std::string* url = child->FindString("url");
++      if (!url) {
++        continue;
++      }
++      entry.url = GURL(*url);
++      if (!entry.url.is_valid() ||
++          !seen->insert({entry.path, entry.title, entry.url.spec()}).second) {
++        continue;
++      }
++      out->push_back(std::move(entry));
++    } else if (type && *type == "folder") {
++      const base::ListValue* inside = child->FindList("children");
++      if (!inside || inside->empty()) {
++        entry.is_folder = true;
++        if (seen->insert({entry.path, entry.title, std::string()}).second) {
++          out->push_back(std::move(entry));
++        }
++        continue;
++      }
++      path->push_back(entry.title);
++      AddBookmarks(*child, in_toolbar, path, seen, out);
++      path->pop_back();
++    }
++  }
++}
++
++}  // namespace
++
++ChromiumImporter::ChromiumImporter() = default;
++
++ChromiumImporter::~ChromiumImporter() = default;
++
++void ChromiumImporter::StartImport(
++    const user_data_importer::SourceProfile& source_profile,
++    uint16_t items,
++    ImporterBridge* bridge) {
++  bridge_ = bridge;
++  source_path_ = source_profile.source_path;
++  local_state_ = source_profile.app_path.Append(FILE_PATH_LITERAL("Local State"));
++  browser_name_ = source_profile.importer_name;
++
++  bridge_->NotifyStarted();
++  if (!copies_.CreateUniqueTempDir()) {
++    bridge_->NotifyEnded();
++    return;
++  }
++  // History before bookmarks, as the other importers do: a favicon is kept
++  // only for a URL that is already in history or bookmarks.
++  if ((items & user_data_importer::HISTORY) && !cancelled()) {
++    bridge_->NotifyItemStarted(user_data_importer::HISTORY);
++    ImportHistory();
++    bridge_->NotifyItemEnded(user_data_importer::HISTORY);
++  }
++  if ((items & user_data_importer::FAVORITES) && !cancelled()) {
++    bridge_->NotifyItemStarted(user_data_importer::FAVORITES);
++    ImportBookmarks();
++    bridge_->NotifyItemEnded(user_data_importer::FAVORITES);
++  }
++  if ((items & user_data_importer::PASSWORDS) && !cancelled()) {
++    bridge_->NotifyItemStarted(user_data_importer::PASSWORDS);
++    ImportPasswords();
++    bridge_->NotifyItemEnded(user_data_importer::PASSWORDS);
++  }
++  if ((items & user_data_importer::SEARCH_ENGINES) && !cancelled()) {
++    bridge_->NotifyItemStarted(user_data_importer::SEARCH_ENGINES);
++    ImportSearchEngines();
++    bridge_->NotifyItemEnded(user_data_importer::SEARCH_ENGINES);
++  }
++  if ((items & user_data_importer::AUTOFILL_FORM_DATA) && !cancelled()) {
++    bridge_->NotifyItemStarted(user_data_importer::AUTOFILL_FORM_DATA);
++    ImportAutofillFormData();
++    bridge_->NotifyItemEnded(user_data_importer::AUTOFILL_FORM_DATA);
++  }
++  bridge_->NotifyEnded();
++}
++
++base::FilePath ChromiumImporter::CopyOf(std::wstring_view name) {
++  const base::FilePath file = source_path_.Append(name);
++  const base::FilePath copy = copies_.GetPath().Append(name);
++  if (!base::PathExists(file) || !base::CopyFile(file, copy)) {
++    return base::FilePath();
++  }
++  // A database in write-ahead-log mode may keep its newest changes in
++  // "<name>-wal" beside it.
++  const base::FilePath wal(file.value() + L"-wal");
++  if (base::PathExists(wal)) {
++    base::CopyFile(wal, base::FilePath(copy.value() + L"-wal"));
++  }
++  return copy;
++}
++
++void ChromiumImporter::ImportHistory() {
++  const base::FilePath file = CopyOf(L"History");
++  if (file.empty()) {
++    return;
++  }
++  sql::Database db(kDatabaseTag);
++  if (!db.Open(file)) {
++    return;
++  }
++  sql::Statement s(db.GetUniqueStatement(
++      "SELECT url, title, visit_count, typed_count, last_visit_time, hidden "
++      "FROM urls"));
++  if (!s.is_valid()) {
++    return;
++  }
++  std::vector<user_data_importer::ImporterURLRow> rows;
++  while (s.Step() && !cancelled()) {
++    GURL url(s.ColumnStringView(0));
++    if (!CanImportURL(url)) {
++      continue;
++    }
++    // Jib: a page with no visit left has no time (Chrome keeps such entries,
++    // for example for bookmarked pages whose visits were cleared). History
++    // takes only visited pages: its check that every page has a visit time
++    // is fatal in TizCat's builds, and one such entry used to close TizCat
++    // at the end of every import, losing everything imported.
++    const base::Time last_visit = FromChromiumTime(s.ColumnInt64(4));
++    if (last_visit.is_null()) {
++      continue;
++    }
++    user_data_importer::ImporterURLRow row(url);
++    row.title = s.ColumnString16(1);
++    row.visit_count = s.ColumnInt(2);
++    row.typed_count = s.ColumnInt(3);
++    row.last_visit = last_visit;
++    row.hidden = s.ColumnInt(5) != 0;
++    rows.push_back(std::move(row));
++  }
++  if (!rows.empty() && !cancelled()) {
++    bridge_->SetHistoryItems(rows, user_data_importer::VISIT_SOURCE_IE_IMPORTED);
++  }
++}
++
++void ChromiumImporter::ImportBookmarks() {
++  std::vector<user_data_importer::ImportedBookmarkEntry> bookmarks;
++  std::set<std::tuple<std::vector<std::u16string>, std::u16string,
++                      std::string>>
++      seen;
++  // "Bookmarks" holds the bookmarks kept on this computer, and
++  // "AccountBookmarks" those kept in the signed-in account (newer versions).
++  for (const wchar_t* name : {L"Bookmarks", L"AccountBookmarks"}) {
++    std::string json;
++    if (cancelled() ||
++        !base::ReadFileToString(source_path_.Append(name), &json)) {
++      continue;
++    }
++    std::optional<base::DictValue> file =
++        base::JSONReader::ReadDict(json, base::JSON_PARSE_RFC);
++    const base::DictValue* roots = file ? file->FindDict("roots") : nullptr;
++    if (!roots) {
++      continue;
++    }
++    // The bookmarks bar's own name heads its entries' paths; the profile
++    // writer drops it when they go straight onto TizCat's empty bar.
++    if (const base::DictValue* bar = roots->FindDict("bookmark_bar")) {
++      const std::string* bar_name = bar->FindString("name");
++      std::vector<std::u16string> path = {
++          bar_name ? base::UTF8ToUTF16(*bar_name) : u"Bookmarks bar"};
++      AddBookmarks(*bar, true, &path, &seen, &bookmarks);
++    }
++    if (const base::DictValue* other = roots->FindDict("other")) {
++      std::vector<std::u16string> path;
++      AddBookmarks(*other, false, &path, &seen, &bookmarks);
++    }
++    if (const base::DictValue* mobile = roots->FindDict("synced")) {
++      const std::string* mobile_name = mobile->FindString("name");
++      std::vector<std::u16string> path = {
++          mobile_name ? base::UTF8ToUTF16(*mobile_name)
++                      : u"Mobile bookmarks"};
++      AddBookmarks(*mobile, false, &path, &seen, &bookmarks);
++    }
++  }
++  if (!bookmarks.empty() && !cancelled()) {
++    bridge_->AddBookmarks(bookmarks, u"Imported from " + browser_name_);
++    ImportFavicons(bookmarks);
++  }
++}
++
++// After the bookmarks: history keeps an imported icon only for a page that
++// is in history or bookmarked.
++void ChromiumImporter::ImportFavicons(
++    const std::vector<user_data_importer::ImportedBookmarkEntry>& bookmarks) {
++  const base::FilePath file = CopyOf(L"Favicons");
++  if (file.empty() || cancelled()) {
++    return;
++  }
++  sql::Database db(kDatabaseTag);
++  if (!db.Open(file)) {
++    return;
++  }
++  // Each page's plain favicon (icon_type 1, not a touch or app icon). All
++  // are made 16 pixels square below, so a 16 or 32 pixel image is taken
++  // first, then the smallest there is.
++  sql::Statement s(db.GetUniqueStatement(
++      "SELECT f.url, b.image_data FROM icon_mapping m "
++      "JOIN favicons f ON f.id = m.icon_id "
++      "JOIN favicon_bitmaps b ON b.icon_id = f.id "
++      "WHERE m.page_url = ? AND f.icon_type = 1 AND length(b.image_data) > 0 "
++      "ORDER BY CASE b.width WHEN 16 THEN 0 WHEN 32 THEN 1 ELSE 2 END, "
++      "b.width LIMIT 1"));
++  if (!s.is_valid()) {
++    return;
++  }
++  // One entry per icon, with every bookmarked page that uses it.
++  std::map<GURL, favicon_base::FaviconUsageData> icons;
++  std::set<GURL> unusable;
++  for (const user_data_importer::ImportedBookmarkEntry& bookmark : bookmarks) {
++    if (cancelled()) {
++      return;
++    }
++    if (bookmark.is_folder || !CanImportURL(bookmark.url)) {
++      continue;
++    }
++    s.Reset(true);
++    s.BindString(0, bookmark.url.spec());
++    if (!s.Step()) {
++      continue;
++    }
++    const GURL icon_url(s.ColumnStringView(0));
++    if (!icon_url.is_valid() || unusable.contains(icon_url)) {
++      continue;
++    }
++    auto it = icons.find(icon_url);
++    if (it == icons.end()) {
++      // The image is decoded and drawn again as a fresh PNG, as the other
++      // importers do, so nothing but a plain image comes across.
++      std::optional<std::vector<uint8_t>> png =
++          importer::ReencodeFavicon(base::as_byte_span(s.ColumnBlobAsVector(1)));
++      if (!png) {
++        unusable.insert(icon_url);
++        continue;
++      }
++      favicon_base::FaviconUsageData icon;
++      icon.favicon_url = icon_url;
++      icon.png_data = std::move(*png);
++      it = icons.emplace(icon_url, std::move(icon)).first;
++    }
++    it->second.urls.insert(bookmark.url);
++  }
++  favicon_base::FaviconUsageDataList list;
++  for (auto& [icon_url, icon] : icons) {
++    list.push_back(std::move(icon));
++  }
++  if (!list.empty() && !cancelled()) {
++    bridge_->SetFavicons(list);
++  }
++}
++
++void ChromiumImporter::ImportPasswords() {
++  std::optional<std::string> key = LoadPasswordKey(local_state_);
++  std::set<std::tuple<std::string, std::string, std::u16string>> seen;
++  // "Login Data" holds the passwords saved on this computer, and
++  // "Login Data For Account" those saved to the signed-in account.
++  for (const wchar_t* name : {L"Login Data", L"Login Data For Account"}) {
++    const base::FilePath file = CopyOf(name);
++    if (file.empty() || cancelled()) {
++      continue;
++    }
++    sql::Database db(kDatabaseTag);
++    if (!db.Open(file)) {
++      continue;
++    }
++    sql::Statement s(db.GetUniqueStatement(
++        "SELECT origin_url, action_url, username_element, username_value, "
++        "password_element, password_value, signon_realm, "
++        "blacklisted_by_user, scheme FROM logins"));
++    if (!s.is_valid()) {
++      continue;
++    }
++    while (s.Step() && !cancelled()) {
++      user_data_importer::ImportedPasswordForm form;
++      // 0 is a web form and 1 HTTP basic sign-in; digest and others can't
++      // be carried over.
++      const int scheme = s.ColumnInt(8);
++      if (scheme == 0) {
++        form.scheme = user_data_importer::ImportedPasswordForm::Scheme::kHtml;
++      } else if (scheme == 1) {
++        form.scheme = user_data_importer::ImportedPasswordForm::Scheme::kBasic;
++      } else {
++        continue;
++      }
++      form.url = GURL(s.ColumnStringView(0));
++      form.action = GURL(s.ColumnStringView(1));
++      form.username_element = s.ColumnString16(2);
++      form.username_value = s.ColumnString16(3);
++      form.password_element = s.ColumnString16(4);
++      form.signon_realm = s.ColumnString(6);
++      form.blocked_by_user = s.ColumnInt(7) != 0;
++      if (!form.url.is_valid() || form.signon_realm.empty()) {
++        continue;
++      }
++      if (!form.blocked_by_user) {
++        std::string value = s.ColumnBlobAsString(5);
++        std::optional<std::u16string> password = DecryptPassword(value, key);
++        std::ranges::fill(value, '\0');
++        if (!password || password->empty()) {
++          continue;
++        }
++        form.password_value = std::move(*password);
++      }
++      if (!seen.insert({form.signon_realm, form.url.spec(),
++                        form.username_value})
++               .second) {
++        continue;
++      }
++      bridge_->SetPasswordForm(form);
++      std::ranges::fill(form.password_value, u'\0');
++    }
++  }
++  if (key) {
++    std::ranges::fill(*key, '\0');
++  }
++}
++
++void ChromiumImporter::ImportSearchEngines() {
++  const base::FilePath file = CopyOf(L"Web Data");
++  if (file.empty()) {
++    return;
++  }
++  sql::Database db(kDatabaseTag);
++  if (!db.Open(file)) {
++    return;
++  }
++  // Only the ones the person added: the built-in engines (prepopulate_id
++  // above 0) are TizCat's own already, and "@bookmarks" and its kind are
++  // shortcuts every Chromium has.
++  sql::Statement s(db.GetUniqueStatement(
++      "SELECT short_name, keyword, url FROM keywords WHERE prepopulate_id = 0"));
++  if (!s.is_valid()) {
++    return;
++  }
++  std::vector<user_data_importer::SearchEngineInfo> engines;
++  while (s.Step() && !cancelled()) {
++    user_data_importer::SearchEngineInfo engine;
++    engine.display_name = s.ColumnString16(0);
++    engine.keyword = s.ColumnString16(1);
++    // Chromium writes the search words as {searchTerms}; the importer takes
++    // them as %s, as a person types the address. An address that needs any
++    // other of Chromium's {placeholders} is left out.
++    std::u16string url = s.ColumnString16(2);
++    base::ReplaceSubstringsAfterOffset(&url, 0, u"{searchTerms}", u"%s");
++    if (engine.keyword.empty() || engine.keyword.starts_with(u"@") ||
++        url.find(u'{') != std::u16string::npos ||
++        url.find(u"%s") == std::u16string::npos) {
++      continue;
++    }
++    engine.url = std::move(url);
++    engines.push_back(std::move(engine));
++  }
++  if (!engines.empty() && !cancelled()) {
++    bridge_->SetKeywords(engines, false);
++  }
++}
++
++void ChromiumImporter::ImportAutofillFormData() {
++  const base::FilePath file = CopyOf(L"Web Data");
++  if (file.empty()) {
++    return;
++  }
++  sql::Database db(kDatabaseTag);
++  if (!db.Open(file)) {
++    return;
++  }
++  // The words typed into web forms, offered again in the same fields. Their
++  // times are seconds since 1970.
++  sql::Statement s(db.GetUniqueStatement(
++      "SELECT name, value, count, date_created, date_last_used FROM autofill"));
++  if (!s.is_valid()) {
++    return;
++  }
++  std::vector<ImporterAutofillFormDataEntry> entries;
++  while (s.Step() && !cancelled()) {
++    ImporterAutofillFormDataEntry entry;
++    entry.name = s.ColumnString16(0);
++    entry.value = s.ColumnString16(1);
++    entry.times_used = s.ColumnInt(2);
++    entry.first_used = base::Time::FromTimeT(s.ColumnInt64(3));
++    entry.last_used = base::Time::FromTimeT(s.ColumnInt64(4));
++    if (!entry.name.empty() && !entry.value.empty()) {
++      entries.push_back(std::move(entry));
++    }
++  }
++  if (!entries.empty() && !cancelled()) {
++    bridge_->SetAutofillFormData(entries);
++  }
++}
+diff --git a/chrome/utility/importer/chromium_importer_win.h b/chrome/utility/importer/chromium_importer_win.h
+new file mode 100644
+index 0000000000..88a07e2fe2
+--- /dev/null
++++ b/chrome/utility/importer/chromium_importer_win.h
+@@ -0,0 +1,64 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_UTILITY_IMPORTER_CHROMIUM_IMPORTER_WIN_H_
++#define CHROME_UTILITY_IMPORTER_CHROMIUM_IMPORTER_WIN_H_
++
++#include <stdint.h>
++
++#include <string>
++#include <string_view>
++#include <vector>
++
++#include "base/files/file_path.h"
++#include "base/files/scoped_temp_dir.h"
++#include "chrome/utility/importer/importer.h"
++#include "components/user_data_importer/common/imported_bookmark_entry.h"
++
++// Jib (TizCat): imports from another Chromium-based browser installed for
++// this Windows user (Google Chrome, Microsoft Edge, Brave, Opera, Vivaldi
++// and others, found by ImporterList): its bookmarks (with their sites'
++// icons), history, saved
++// passwords, search engines and autofill entries, read from copies of the
++// files in its profile folder (SourceProfile::source_path). Its saved
++// passwords are encrypted with a key kept in the "Local State" file in
++// SourceProfile::app_path.
++class ChromiumImporter : public Importer {
++ public:
++  ChromiumImporter();
++
++  ChromiumImporter(const ChromiumImporter&) = delete;
++  ChromiumImporter& operator=(const ChromiumImporter&) = delete;
++
++  // Importer:
++  void StartImport(const user_data_importer::SourceProfile& source_profile,
++                   uint16_t items,
++                   ImporterBridge* bridge) override;
++
++ private:
++  ~ChromiumImporter() override;
++
++  void ImportHistory();
++  void ImportBookmarks();
++  // The sites' icons for `bookmarks`, from the profile's "Favicons"
++  // database, so they show at once instead of a globe until each page is
++  // visited.
++  void ImportFavicons(
++      const std::vector<user_data_importer::ImportedBookmarkEntry>& bookmarks);
++  void ImportPasswords();
++  void ImportSearchEngines();
++  void ImportAutofillFormData();
++
++  // Copies the profile's file `name` (with its write-ahead log, if any) to a
++  // temporary folder, since the browser may have it open, and returns the
++  // copy's path; an empty path if there is no such file or it can't be read.
++  base::FilePath CopyOf(std::wstring_view name);
++
++  base::FilePath source_path_;
++  base::FilePath local_state_;
++  std::u16string browser_name_;
++  base::ScopedTempDir copies_;
++};
++
++#endif  // CHROME_UTILITY_IMPORTER_CHROMIUM_IMPORTER_WIN_H_
+diff --git a/chrome/utility/importer/importer_creator.cc b/chrome/utility/importer/importer_creator.cc
+index 5f8f27c70b..ff8b49fe1a 100644
+--- a/chrome/utility/importer/importer_creator.cc
++++ b/chrome/utility/importer/importer_creator.cc
+@@ -11,6 +11,7 @@
+ 
+ #if BUILDFLAG(IS_WIN)
+ #include "chrome/common/importer/edge_importer_utils_win.h"
++#include "chrome/utility/importer/chromium_importer_win.h"
+ #include "chrome/utility/importer/edge_importer_win.h"
+ #include "chrome/utility/importer/ie_importer_win.h"
+ #endif
+@@ -33,6 +34,8 @@ scoped_refptr<Importer> CreateImporterByType(
+       if (IsEdgeFavoritesLegacyMode())
+         return new IEImporter();
+       return new EdgeImporter();
++    case user_data_importer::TYPE_CHROMIUM:  // Jib
++      return new ChromiumImporter();
+ #endif
+     case user_data_importer::TYPE_BOOKMARKS_FILE:
+       return new BookmarksFileImporter();
+diff --git a/components/user_data_importer/common/importer_type.h b/components/user_data_importer/common/importer_type.h
+index d4f7de8d9a..9913e21afa 100644
+--- a/components/user_data_importer/common/importer_type.h
++++ b/components/user_data_importer/common/importer_type.h
+@@ -27,6 +27,9 @@ enum ImporterType {
+   TYPE_BOOKMARKS_FILE = 5,  // Identifies a 'bookmarks.html' file.
+ #if BUILDFLAG(IS_WIN)
+   TYPE_EDGE = 6,
++  // Jib: another Chromium-based browser (Google Chrome, Edge, Brave, Opera,
++  // Vivaldi and others), imported by ChromiumImporter.
++  TYPE_CHROMIUM = 7,
+ #endif
+ };
+ 

@@ -1,0 +1,607 @@
+diff --git a/chrome/app/settings_strings.grdp b/chrome/app/settings_strings.grdp
+index e4f7194..8209484 100644
+--- a/chrome/app/settings_strings.grdp
++++ b/chrome/app/settings_strings.grdp
+@@ -3630,8 +3630,29 @@
+     </message>
+ 
+     <!-- Sync / People Page -->
+-    <message name="IDS_SETTINGS_PEOPLE" desc="Name of the settings page which manages the user's relationship to Google.">
+-      You and Google
++    <message name="IDS_SETTINGS_PEOPLE" desc="Name of the settings page with the profile's name and icon, importing from other browsers, the default browser and what opens on startup (TizCat's version of Brave's 'Get started').">
++      Profile
++    </message>
++    <message name="IDS_SETTINGS_PROFILE_NAME_AND_ICON" desc="Label of the row on the Profile settings page that opens the page for changing the profile's name, theme color and avatar.">
++      Profile name and icon
++    </message>
++    <message name="IDS_SETTINGS_TIZCAT_ACCOUNT_TITLE" desc="Title of the first row on the Profile settings page, about the person's account on the TizCat website.">
++      TizCat account
++    </message>
++    <message name="IDS_SETTINGS_TIZCAT_ACCOUNT_TEXT" desc="Second line of the TizCat account row on the Profile settings page. TizCat Rewards and JibWallet are product names.">
++      Log in or create one, for TizCat Rewards and later JibWallet.
++    </message>
++    <message name="IDS_SETTINGS_TIZCAT_ACCOUNT_BUTTON" desc="Button on the TizCat account row of the Profile settings page; opens the TizCat account website in a new tab.">
++      Get started
++    </message>
++    <message name="IDS_SETTINGS_JIB_WALLET" desc="Name of the settings page for JibWallet, TizCat's wallet (a product name), in the settings menu and as the page's title.">
++      JibWallet
++    </message>
++    <message name="IDS_SETTINGS_JIB_WALLET_COMING_TITLE" desc="First line on the JibWallet settings page while the wallet is not built yet.">
++      JibWallet is coming
++    </message>
++    <message name="IDS_SETTINGS_JIB_WALLET_COMING_TEXT" desc="Second line on the JibWallet settings page while the wallet is not built yet. TizCat Rewards is a product name.">
++      Until it is ready, TizCat Rewards are kept as points.
+     </message>
+     <message name="IDS_SETTINGS_CHANGE_PICTURE_PROFILE_PHOTO" desc="The text on the Google profile photo of the user.">
+       Google Profile photo
+diff --git a/chrome/browser/resources/settings/BUILD.gn b/chrome/browser/resources/settings/BUILD.gn
+index 931e708..5d0d9d5 100644
+--- a/chrome/browser/resources/settings/BUILD.gn
++++ b/chrome/browser/resources/settings/BUILD.gn
+@@ -483,6 +483,10 @@ build_webui("build") {
+       "default_browser_page/default_browser_browser_proxy.ts",
+       "default_browser_page/default_browser_page.html.ts",
+       "default_browser_page/default_browser_page.ts",
++
++      # Jib: the JibWallet page (a placeholder until JibWallet is built).
++      "jib_wallet_page/jib_wallet_page.html.ts",
++      "jib_wallet_page/jib_wallet_page.ts",
+       "languages_page/add_languages_dialog.html.ts",
+       "languages_page/add_languages_dialog.ts",
+       "languages_page/languages.ts",
+diff --git a/chrome/browser/resources/settings/default_browser_page/default_browser_page.html.ts b/chrome/browser/resources/settings/default_browser_page/default_browser_page.html.ts
+index 07df68f..9b52ece 100644
+--- a/chrome/browser/resources/settings/default_browser_page/default_browser_page.html.ts
++++ b/chrome/browser/resources/settings/default_browser_page/default_browser_page.html.ts
+@@ -8,11 +8,12 @@ import type {SettingsDefaultBrowserPageElement} from './default_browser_page.js'
+ 
+ export function getHtml(this: SettingsDefaultBrowserPageElement) {
+   // clang-format off
++  // Jib: drawn as rows of the Profile page's card (people_page.html.ts), as
++  // Brave draws it on "Get started", so no section of its own and no
++  // "first" row.
+   return html`<!--_html_template_start_-->
+-<settings-section page-title="$i18n{defaultBrowser}"
+-    class="cr-centered-card-container">
+   ${this.maySetDefaultBrowser_ ? html`
+-    <div class="cr-row first">
++    <div class="cr-row">
+       <div class="flex cr-padded-text">
+         <div id="canBeDefaultBrowser">$i18n{defaultBrowser}</div>
+         <div class="secondary" id="makeDefaultLabel">
+@@ -25,7 +26,7 @@ export function getHtml(this: SettingsDefaultBrowserPageElement) {
+       </cr-button>
+     </div>
+   ` : html`
+-    <div class="cr-row first">
++    <div class="cr-row">
+       <div class="flex cr-padded-text" ?hidden="${!this.isDefault_}"
+           id="isDefault">
+         <!--
+@@ -53,7 +54,6 @@ export function getHtml(this: SettingsDefaultBrowserPageElement) {
+       </div>
+     </div>
+   `}
+-</settings-section>
+ <!--_html_template_end_-->`;
+   // clang-format on
+ }
+diff --git b/chrome/browser/resources/settings/jib_wallet_page/jib_wallet_page.html.ts b/chrome/browser/resources/settings/jib_wallet_page/jib_wallet_page.html.ts
+new file mode 100644
+index 0000000..d22bfec
+--- /dev/null
++++ b/chrome/browser/resources/settings/jib_wallet_page/jib_wallet_page.html.ts
+@@ -0,0 +1,22 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++import {html} from '//resources/lit/v3_0/lit.rollup.js';
++
++import type {SettingsJibWalletPageElement} from './jib_wallet_page.js';
++
++// Jib: a placeholder until JibWallet is built (see jib_wallet_page.ts).
++export function getHtml(this: SettingsJibWalletPageElement) {
++  return html`<!--_html_template_start_-->
++<settings-section page-title="$i18n{jibWalletPageTitle}"
++    class="cr-centered-card-container">
++  <div class="cr-row first two-line">
++    <div class="flex cr-padded-text">
++      <div>$i18n{jibWalletComingTitle}</div>
++      <div class="secondary">$i18n{jibWalletComingText}</div>
++    </div>
++  </div>
++</settings-section>
++<!--_html_template_end_-->`;
++}
+diff --git b/chrome/browser/resources/settings/jib_wallet_page/jib_wallet_page.ts b/chrome/browser/resources/settings/jib_wallet_page/jib_wallet_page.ts
+new file mode 100644
+index 0000000..7a61357
+--- /dev/null
++++ b/chrome/browser/resources/settings/jib_wallet_page/jib_wallet_page.ts
+@@ -0,0 +1,50 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++/**
++ * @fileoverview
++ * Jib: 'settings-jib-wallet-page' is TizCat's JibWallet section, in the menu
++ * where Brave has "Web3". JibWallet itself is not built yet, so for now the
++ * page only says so; TizCat Rewards keep earnings as points until then.
++ */
++import '../settings_page/settings_section.js';
++
++import {getCss as getCrSharedStyle} from 'chrome://resources/cr_elements/cr_shared_style_lit.css.js';
++import {CrLitElement} from 'chrome://resources/lit/v3_0/lit.rollup.js';
++
++import {getSearchManager} from '../search_settings.js';
++import type {SettingsPlugin} from '../settings_main/settings_plugin.js';
++import {getCss as getSettingsSharedLit} from '../settings_shared_lit.css.js';
++
++import {getHtml} from './jib_wallet_page.html.js';
++
++export class SettingsJibWalletPageElement extends CrLitElement implements
++    SettingsPlugin {
++  static get is() {
++    return 'settings-jib-wallet-page';
++  }
++
++  static override get styles() {
++    return [getCrSharedStyle(), getSettingsSharedLit()];
++  }
++
++  override render() {
++    return getHtml.bind(this)();
++  }
++
++  // SettingsPlugin implementation
++  async searchContents(query: string) {
++    const searchRequest = await getSearchManager().search(query, this);
++    return searchRequest.getSearchResult();
++  }
++}
++
++declare global {
++  interface HTMLElementTagNameMap {
++    'settings-jib-wallet-page': SettingsJibWalletPageElement;
++  }
++}
++
++customElements.define(
++    SettingsJibWalletPageElement.is, SettingsJibWalletPageElement);
+diff --git a/chrome/browser/resources/settings/on_startup_page/on_startup_page.html.ts b/chrome/browser/resources/settings/on_startup_page/on_startup_page.html.ts
+index 064f725..c6a1304 100644
+--- a/chrome/browser/resources/settings/on_startup_page/on_startup_page.html.ts
++++ b/chrome/browser/resources/settings/on_startup_page/on_startup_page.html.ts
+@@ -8,10 +8,22 @@ import type {SettingsOnStartupPageElement} from './on_startup_page.js';
+ import {PrefValues} from './on_startup_page.js';
+ 
+ export function getHtml(this: SettingsOnStartupPageElement) {
++  // Jib: outside ChromeOS these are the last rows of the Profile page's card,
++  // as on Brave's "Get started": an "On startup" row, then the choices
++  // indented under it (Brave's radio circles sit about 20px in from the
++  // row's text).
+   return html`<!--_html_template_start_-->
++<if expr="is_chromeos">
+ <settings-section page-title="$i18n{onStartup}"
+     class="cr-centered-card-container">
+   <div class="cr-row first">
++</if>
++<if expr="not is_chromeos">
++  <div class="cr-row">
++    <div class="flex cr-padded-text">$i18n{onStartup}</div>
++  </div>
++  <div class="cr-row continuation" style="padding-inline-start: 40px">
++</if>
+     <settings-radio-group id="onStartupRadioGroup"
+         class="flex"
+         pref-key="session.restore_on_startup"
+@@ -56,6 +68,8 @@ export function getHtml(this: SettingsOnStartupPageElement) {
+     </settings-toggle-button>
+   ` : ''}
+ </if>
++<if expr="is_chromeos">
+ </settings-section>
++</if>
+ <!--_html_template_end_-->`;
+ }
+diff --git a/chrome/browser/resources/settings/people_page/people_page.css b/chrome/browser/resources/settings/people_page/people_page.css
+index e59d758..938b39a 100644
+--- a/chrome/browser/resources/settings/people_page/people_page.css
++++ b/chrome/browser/resources/settings/people_page/people_page.css
+@@ -46,6 +46,22 @@ cr-link-row {
+   border-top: var(--cr-separator-line);
+ }
+ 
++/* Jib: the TizCat logo at the start of the account row, as Brave's logo on
++   its account row. */
++#tizcatAccountLogo {
++  flex-shrink: 0;
++  height: 24px;
++  margin-inline-end: 16px;
++  width: 24px;
++}
++
++/* Jib: the default browser and On startup rows sit in the Profile card as
++   blocks. */
++settings-default-browser-page,
++settings-on-startup-page {
++  display: block;
++}
++
+ .icon-container {
+   display: flex;
+   flex-shrink: 0;
+diff --git a/chrome/browser/resources/settings/people_page/people_page.html.ts b/chrome/browser/resources/settings/people_page/people_page.html.ts
+index b330308..fec7888 100644
+--- a/chrome/browser/resources/settings/people_page/people_page.html.ts
++++ b/chrome/browser/resources/settings/people_page/people_page.html.ts
+@@ -4,49 +4,54 @@
+ 
+ import {html} from '//resources/lit/v3_0/lit.rollup.js';
+ 
+-import {ChromeSigninAccessPoint} from '/shared/settings/people_page/sync_browser_proxy.js';
+-
+ import type {SettingsPeoplePageElement} from './people_page.js';
+ 
++// Jib: outside ChromeOS this is TizCat's "Profile" page, laid out as Brave's
++// "Get started": profile name and icon, import, default browser and On
++// startup, all in one card. Chrome's Google sign-in and sync rows are gone
++// from it (TizCat has no Google API keys, so sync cannot work); the shared
++// ones are kept, hidden, because the page's focus code looks them up when
++// coming back from their subpages.
+ export function getHtml(this: SettingsPeoplePageElement) {
+   return html`<!--_html_template_start_-->
+ <settings-section page-title="$i18n{peoplePageTitle}">
+       <div>
+ 
+ <if expr="not is_chromeos">
+-        ${this.shouldShowSyncAccountControl_() ? html`
+-          <settings-sync-account-control
+-              .syncStatus="${this.syncStatus!}"
+-              promo-label-with-account="$i18n{peopleSignInPrompt}"
+-              promo-label-with-no-account="$i18n{peopleSignInPrompt}"
+-              promo-secondary-label-with-account=
+-                  "$i18n{peopleSignInPromptSecondaryWithAccount}"
+-              promo-secondary-label-with-no-account=
+-                  "$i18n{peopleSignInPromptSecondaryWithNoAccount}"
+-              .accessPoint="${ChromeSigninAccessPoint.SETTINGS}">
+-          </settings-sync-account-control>
+-        ` : ''}
+-
+-        ${this.shouldLinkToProfileRow_() ? html`
+-          <div id="profile-row" class="cr-row first two-line"
+-              ?actionable="${this.isProfileActionable_}"
+-              @click="${this.onProfileClick_}">
+-            ${this.syncStatus ? html`
+-              <div id="profile-icon"
+-                  style="background-image: ${this.getIconImageSet_(
+-                      this.profileIconUrl_)}">
+-              </div>
+-              <div class="flex cr-row-gap cr-padded-text text-elide">
+-                <span id="profile-name">${this.profileName_}</span>
+-              </div>
+-              <cr-icon-button class="subpage-arrow"
+-                  aria-label="$i18n{editPerson}"
+-                  aria-describedby="profile-name"
+-                  aria-roledescription="$i18n{subpageArrowRoleDescription}">
+-              </cr-icon-button>
+-            ` : ''}
++        <!-- Jib: the TizCat account row, first, as Brave's account row
++             ("Log in or create a Brave account", "Get Started"). It opens
++             tizcat.com/go/account; where that leads is the server's to say,
++             so the account site can change without a rebuild. -->
++        <div id="tizcatAccountRow" class="cr-row first two-line">
++          <img id="tizcatAccountLogo" alt=""
++              srcset="chrome://theme/current-channel-logo@1x 1x,
++                      chrome://theme/current-channel-logo@2x 2x">
++          <div class="flex cr-padded-text">
++            <div>$i18n{tizcatAccountTitle}</div>
++            <div class="secondary">$i18n{tizcatAccountText}</div>
+           </div>
+-        ` : ''}
++          <cr-button id="tizcatAccountButton"
++              @click="${this.onTizcatAccountClick_}">
++            $i18n{tizcatAccountButton}
++          </cr-button>
++        </div>
++
++        <cr-link-row id="edit-profile"
++            label="$i18n{profileNameAndIcon}"
++            @click="${this.onProfileClick_}"
++            role-description="$i18n{subpageArrowRoleDescription}">
++        </cr-link-row>
++
++        <cr-link-row id="importDataDialogTrigger"
++            label="$i18n{importTitle}"
++            @click="${this.onImportDataClick_}">
++        </cr-link-row>
++
++        <settings-default-browser-page></settings-default-browser-page>
++
++        <settings-on-startup-page></settings-on-startup-page>
++
++        <div id="googleRows" hidden>
+ </if>
+ 
+ <if expr="is_chromeos">
+@@ -106,32 +111,7 @@ export function getHtml(this: SettingsPeoplePageElement) {
+         </cr-link-row>
+ 
+ <if expr="not is_chromeos">
+-        ${this.signinAllowed_ ? html`
+-          <cr-link-row id="manage-google-account"
+-              label="$i18n{manageGoogleAccount}"
+-              ?hidden="${!this.shouldShowGoogleAccount_}"
+-              @click="${this.onGoogleAccountClick_}" external>
+-          </cr-link-row>
+-
+-          <cr-link-row id="edit-profile"
+-              label="$i18n{profileNameAndPicture}"
+-              @click="${this.onProfileClick_}">
+-          </cr-link-row>
+-        ` : ''}
+-
+-        <cr-link-row id="importDataDialogTrigger"
+-            label="$i18n{importTitle}"
+-            @click="${this.onImportDataClick_}">
+-        </cr-link-row>
+-
+-        ${this.isDasherlessProfile_ ? html`
+-          <div id="sync-not-allowed" class="cr-row continuation">
+-            <cr-icon id="info-icon" icon="cr:info"></cr-icon>
+-            <div id="sync-not-allowed-text" class="flex cr-padded-text">
+-              $i18n{syncUnavailableForNonGoogleAccount}
+-            </div>
+-          </div>
+-        ` : ''}
++        </div>
+ </if>
+ 
+       </div>
+diff --git a/chrome/browser/resources/settings/people_page/people_page.ts b/chrome/browser/resources/settings/people_page/people_page.ts
+index 0dcc177..50e7228 100644
+--- a/chrome/browser/resources/settings/people_page/people_page.ts
++++ b/chrome/browser/resources/settings/people_page/people_page.ts
+@@ -16,6 +16,9 @@ import 'chrome://resources/cr_elements/policy/cr_policy_indicator.js';
+ import '../controls/settings_toggle_button.js';
+ // <if expr="not is_chromeos">
+ import './sync_account_control.js';
++// Jib: drawn on the Profile page, as on Brave's "Get started".
++import '../default_browser_page/default_browser_page.js';
++import '../on_startup_page/on_startup_page.js';
+ // </if>
+ import '../icons.html.js';
+ import '../settings_page/settings_section.js';
+@@ -299,6 +302,15 @@ export class SettingsPeoplePageElement extends SettingsPeoplePageElementBase {
+   }
+   // </if>
+ 
++  // <if expr="not is_chromeos">
++  // Jib: the TizCat account row's button. The browser only knows this link;
++  // the server decides where it leads (the account site at
++  // account.tizcat.com), so that can change without a rebuild.
++  protected onTizcatAccountClick_() {
++    OpenWindowProxyImpl.getInstance().openUrl('https://tizcat.com/go/account');
++  }
++  // </if>
++
+   protected onProfileClick_() {
+     // <if expr="is_chromeos">
+     if (loadTimeData.getBoolean('isAccountManagerEnabled')) {
+@@ -448,11 +460,8 @@ export class SettingsPeoplePageElement extends SettingsPeoplePageElementBase {
+     }
+     // <if expr="not is_chromeos">
+     if (routes.MANAGE_PROFILE) {
+-      map.set(
+-          routes.MANAGE_PROFILE.path,
+-          loadTimeData.getBoolean('signinAllowed') ?
+-              '#edit-profile' :
+-              '#profile-row .subpage-arrow');
++      // Jib: the Profile page always has the "Profile name and icon" row.
++      map.set(routes.MANAGE_PROFILE.path, '#edit-profile');
+     }
+     // </if>
+     return map;
+@@ -484,7 +493,7 @@ export class SettingsPeoplePageElement extends SettingsPeoplePageElementBase {
+         break;
+       // <if expr="not is_chromeos">
+       case 'manageProfile':
+-        triggerId = this.signinAllowed_ ? 'edit-profile' : 'profile-row';
++        triggerId = 'edit-profile';  // Jib: see getFocusConfig().
+         break;
+       // </if>
+       default:
+diff --git a/chrome/browser/resources/settings/route.ts b/chrome/browser/resources/settings/route.ts
+index 257eee5..c0abc86 100644
+--- a/chrome/browser/resources/settings/route.ts
++++ b/chrome/browser/resources/settings/route.ts
+@@ -246,17 +246,35 @@ function createRoutes(): SettingsRoutes {
+   }
+ 
+   // <if expr="not is_chromeos">
+-  if (visibility.defaultBrowser !== false) {
+-    r.DEFAULT_BROWSER = r.BASIC.createSection(
+-        '/defaultBrowser', 'defaultBrowser',
+-        loadTimeData.getString('defaultBrowser'));
++  // Jib: JibWallet, TizCat's wallet (a placeholder page until it is built),
++  // where Brave has "Web3". Not for guests, like the Profile page.
++  if (visibility.people !== false) {
++    r.JIB_WALLET = r.BASIC.createSection(
++        '/jibWallet', 'jibWallet',
++        loadTimeData.getString('jibWalletPageTitle'));
++  }
++  // </if>
++
++  // <if expr="not is_chromeos">
++  // Jib: Default browser and On startup are part of the Profile page, as
++  // Brave keeps them on its "Get started" page, so their routes are the
++  // Profile page's. Their old addresses (chrome://settings/defaultBrowser and
++  // /onStartup) are no longer routes and open the first page, which is
++  // Profile.
++  if (visibility.defaultBrowser !== false && r.PEOPLE) {
++    r.DEFAULT_BROWSER = r.PEOPLE;
++  }
++  if (visibility.onStartup !== false && r.PEOPLE) {
++    r.ON_STARTUP = r.PEOPLE;
+   }
+   // </if>
+ 
++  // <if expr="is_chromeos">
+   if (visibility.onStartup !== false) {
+     r.ON_STARTUP = r.BASIC.createSection(
+         '/onStartup', 'onStartup', loadTimeData.getString('onStartup'));
+   }
++  // </if>
+ 
+   // Advanced Routes
+   r.ADVANCED = new Route('/advanced');
+diff --git a/chrome/browser/resources/settings/router.ts b/chrome/browser/resources/settings/router.ts
+index 47b4a04..bd5d595 100644
+--- a/chrome/browser/resources/settings/router.ts
++++ b/chrome/browser/resources/settings/router.ts
+@@ -41,6 +41,7 @@ export interface SettingsRoutes {
+   HISTORY_SEARCH: Route;
+   IDENTITY_DOCS: Route;
+   INLINE_CUE_MENU: Route;
++  JIB_WALLET: Route;  // Jib: TizCat's JibWallet page (route.ts).
+   LANGUAGES: Route;
+   MANAGE_PROFILE: Route;
+   OFFER_WRITING_HELP: Route;
+diff --git a/chrome/browser/resources/settings/settings_main/settings_main.html b/chrome/browser/resources/settings/settings_main/settings_main.html
+index db5a40e..ff734e0 100644
+--- a/chrome/browser/resources/settings/settings_main/settings_main.html
++++ b/chrome/browser/resources/settings/settings_main/settings_main.html
+@@ -70,6 +70,18 @@
+     </div>
+   </template>
+ 
++<if expr="not is_chromeos">
++  <!-- Jib: TizCat's JibWallet page (a placeholder until JibWallet is built). -->
++  <template is="dom-if" if="[[showPage_(pageVisibility_.people)]]">
++    <div slot="view" id="jibWallet">
++      <template is="dom-if" if="[[renderPlugin_(
++          routes_.JIB_WALLET, lastRoute_, inSearchMode_)]]">
++        <settings-jib-wallet-page></settings-jib-wallet-page>
++      </template>
++    </div>
++  </template>
++</if>
++
+   <template is="dom-if" if="[[showPage_(
+       pageVisibility_.yourSavedInfo)]]">
+     <div slot="view" id="yourSavedInfo">
+@@ -119,17 +131,9 @@
+     </template>
+   </div>
+ 
+-<if expr="not is_chromeos">
+-  <template is="dom-if" if="[[showPage_(pageVisibility_.defaultBrowser)]]">
+-    <div slot="view" id="defaultBrowser">
+-      <template is="dom-if" if="[[renderPlugin_(
+-          routes_.DEFAULT_BROWSER, lastRoute_, inSearchMode_)]]">
+-        <settings-default-browser-page></settings-default-browser-page>
+-      </template>
+-    </div>
+-  </template>
+-</if>
+-
++<!-- Jib: Default browser and On startup are drawn by the Profile page
++     (settings-people-page), so they have no views of their own here. -->
++<if expr="is_chromeos">
+   <template is="dom-if" if="[[showPage_(pageVisibility_.onStartup)]]">
+     <div slot="view" id="onStartup">
+       <template is="dom-if" if="[[renderPlugin_(
+@@ -138,6 +142,7 @@
+       </template>
+     </div>
+   </template>
++</if>
+ 
+   <template is="dom-if" if="[[showPage_(pageVisibility_.languages)]]">
+     <div slot="view" id="languages">
+diff --git a/chrome/browser/resources/settings/settings_main/settings_main.ts b/chrome/browser/resources/settings/settings_main/settings_main.ts
+index 34b2cae..a1dc702 100644
+--- a/chrome/browser/resources/settings/settings_main/settings_main.ts
++++ b/chrome/browser/resources/settings/settings_main/settings_main.ts
+@@ -22,6 +22,8 @@ import '../reset_page/reset_profile_banner.js';
+ import '../search_page/search_page_index.js';
+ // <if expr="not is_chromeos">
+ import '../default_browser_page/default_browser_page.js';
++// Jib: the JibWallet page, in the menu where Brave has "Web3".
++import '../jib_wallet_page/jib_wallet_page.js';
+ 
+ // </if>
+ 
+diff --git a/chrome/browser/resources/settings/settings_menu/settings_menu.html b/chrome/browser/resources/settings/settings_menu/settings_menu.html
+index c35c985..3381bf6 100644
+--- a/chrome/browser/resources/settings/settings_menu/settings_menu.html
++++ b/chrome/browser/resources/settings/settings_menu/settings_menu.html
+@@ -30,6 +30,16 @@
+           <span class="menu-label">$i18n{privacyPageTitle}</span>
+           <cr-ripple></cr-ripple>
+         </a>
++<if expr="not is_chromeos">
++        <!-- Jib: TizCat's wallet, where Brave has "Web3". -->
++        <a role="menuitem" id="jibWallet" href="/jibWallet"
++            ?hidden="${this.shouldHideMenuItem_(this.pageVisibility_?.people)}"
++            class="cr-nav-menu-item">
++          <cr-icon icon="settings:wallet"></cr-icon>
++          <span class="menu-label">$i18n{jibWalletPageTitle}</span>
++          <cr-ripple></cr-ripple>
++        </a>
++</if>
+         <a role="menuitem" id="performance" href="/performance"
+             class="cr-nav-menu-item"
+             ?hidden="${this.shouldHideMenuItem_(this.pageVisibility_?.performance)}">
+@@ -56,15 +66,9 @@
+           <span class="menu-label">$i18n{searchPageTitle}</span>
+           <cr-ripple></cr-ripple>
+         </a>
+-<if expr="not is_chromeos">
+-        <a role="menuitem" id="defaultBrowser" class="cr-nav-menu-item"
+-          href="/defaultBrowser"
+-          ?hidden="${this.shouldHideMenuItem_(this.pageVisibility_?.defaultBrowser)}">
+-          <cr-icon icon="settings:web-asset"></cr-icon>
+-          <span class="menu-label">$i18n{defaultBrowser}</span>
+-          <cr-ripple></cr-ripple>
+-        </a>
+-</if>
++<!-- Jib: Default browser and On startup are on the Profile page (the first
++     item), as Brave keeps them on its "Get started" page. -->
++<if expr="is_chromeos">
+         <a role="menuitem" id="onStartup" href="/onStartup"
+             class="cr-nav-menu-item"
+             ?hidden="${this.shouldHideMenuItem_(this.pageVisibility_?.onStartup)}">
+@@ -72,6 +76,7 @@
+           <span class="menu-label">$i18n{onStartup}</span>
+           <cr-ripple></cr-ripple>
+         </a>
++</if>
+         <div class="menu-separator"></div>
+         <a role="menuitem" id="languages" href="/languages"
+             class="cr-nav-menu-item"
+diff --git a/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc b/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
+index 39ca56a..d5e1ba2 100644
+--- a/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
++++ b/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
+@@ -2554,6 +2554,18 @@ void AddPeopleStrings(content::WebUIDataSource* html_source, Profile* profile) {
+       syncer::IsReplaceSyncPromosWithSignInPromosEnabled()
+           ? IDS_SETTINGS_CUSTOMIZE_PROFILE
+           : IDS_SETTINGS_CUSTOMIZE_YOUR_CHROME_PROFILE);
++  // Jib: the Profile page's rows, worded as Brave's "Get started", and the
++  // JibWallet page (in the menu where Brave has "Web3").
++  static constexpr webui::LocalizedString kJibStrings[] = {
++      {"profileNameAndIcon", IDS_SETTINGS_PROFILE_NAME_AND_ICON},
++      {"tizcatAccountTitle", IDS_SETTINGS_TIZCAT_ACCOUNT_TITLE},
++      {"tizcatAccountText", IDS_SETTINGS_TIZCAT_ACCOUNT_TEXT},
++      {"tizcatAccountButton", IDS_SETTINGS_TIZCAT_ACCOUNT_BUTTON},
++      {"jibWalletPageTitle", IDS_SETTINGS_JIB_WALLET},
++      {"jibWalletComingTitle", IDS_SETTINGS_JIB_WALLET_COMING_TITLE},
++      {"jibWalletComingText", IDS_SETTINGS_JIB_WALLET_COMING_TEXT},
++  };
++  html_source->AddLocalizedStrings(kJibStrings);
+ #endif
+ 
+   html_source->AddBoolean(

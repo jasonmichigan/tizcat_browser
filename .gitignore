@@ -1,0 +1,38 @@
+# TizCat's version history: what is NOT kept in it.
+# The history itself lives in C:\tizcat-git\tizcat.git, outside Google Drive
+# (Drive syncing git's internal files can corrupt them); the .git file here
+# only points there. The Chromium source in C:\tizcat is not kept either:
+# every change TizCat makes to it is in patches\.
+
+# Never: the Cloudflare login (a password in plain text), account recovery
+# codes, keys and other credentials, wherever they are saved.
+servers/cloudflare.txt
+*recovery*code*
+*backup*code*
+*.pem
+*.key
+*.pfx
+.env
+.env.*
+*credentials*
+*api*key*
+*apikey*
+*secret*.txt
+*password*.txt
+
+# Made again by the tests on every run.
+tests/out/
+
+# Tool caches.
+.wrangler/
+node_modules/
+__pycache__/
+
+# Office and Windows leftovers, and the backup copies kept before a
+# hand-edited Word document is changed in place (e.g. about_v1.docx.bak-20261124).
+~$*
+*.tmp
+*.bak
+*.bak-*
+desktop.ini
+Thumbs.db

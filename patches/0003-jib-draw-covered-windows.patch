@@ -1,0 +1,16 @@
+diff --git a/ui/base/ui_base_features.cc b/ui/base/ui_base_features.cc
+index 3ee35e743d..a26a6b7b12 100644
+--- a/ui/base/ui_base_features.cc
++++ b/ui/base/ui_base_features.cc
+@@ -37,7 +37,10 @@ BASE_FEATURE_PARAM(bool,
+ 
+ #if BUILDFLAG(IS_WIN)
+ // If enabled, calculate native window occlusion - Windows-only.
+-BASE_FEATURE(kCalculateNativeWinOcclusion, base::FEATURE_ENABLED_BY_DEFAULT);
++// Jib: off by default. A covered window (or every window, while the screen is
++// locked) would stop drawing, and Yuzal's screenshot of her tab would wait
++// for a frame that never comes. Jeep made the same choice.
++BASE_FEATURE(kCalculateNativeWinOcclusion, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ // Once enabled, the exact behavior is dictated by the field trial param
+ // name `kApplyNativeOcclusionToCompositorType`.

@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Yuzal",
+  "version": "0.1.0",
+  "description": "TizCat’s assistant. Reads and drives the page you are on; its brain is Jeep’s Python backend on this computer.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5GBW+qAb4mQhaBuQwxg8SGMJYvobw+qGZBGoEHDpg95+W/Oa2lnL/8OKlzIIhaL78FnVR91GL5ZkkYzEW6pZfNqfMO5nD/NQn37Z3xOcZoQ19sSyrwd563j+jTMdFT9bvkTmicACtAC5qPeM/H+yZ8pvdzdj5w/3k/H36iImfJmsxBsBdA0EJF7sj4jKEAIxDIK0usPicrlYU7KSnmzXJKHFnWij20m4puP8Moxq2In2xiqXezSo8nULFmV+yP6wpdYGsbhgHZ0FOxb820YSPecj9umKuRpZIMa4ACvqznx6DChhf9WJbsjp3mgdKKGfjMRe8fQBB5vMdewr7IZ7kwIDAQAB",
+  "minimum_chrome_version": "120",
+  "permissions": [
+    "sidePanel",
+    "debugger",
+    "tabs",
+    "storage",
+    "contextMenus",
+    "downloads",
+    "power"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "sw.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  },
+  "options_page": "settings.html",
+  "action": {
+    "default_title": "Yuzal",
+    "default_icon": {
+      "16": "icons/ai_16.png",
+      "24": "icons/ai_24.png",
+      "32": "icons/ai_32.png",
+      "48": "icons/ai_48.png"
+    }
+  },
+  "icons": {
+    "16": "icons/ai_16.png",
+    "32": "icons/ai_32.png",
+    "48": "icons/ai_48.png",
+    "128": "icons/ai_128.png"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+L"
+      },
+      "description": "Open Yuzal"
+    }
+  }
+}

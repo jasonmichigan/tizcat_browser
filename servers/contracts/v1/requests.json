@@ -1,0 +1,196 @@
+{
+  "$comment": "TizCat API v1: the request bodies each server accepts. The servers validate against these (shared/validate.js), and the tests check the examples in README.md against them. A change that keeps these is safe for every part; a change that breaks them is v2.",
+  "account.signup": {
+    "type": "object",
+    "required": [
+      "email",
+      "authKey",
+      "vaultKey"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "email": {
+        "type": "string",
+        "maxLength": 254
+      },
+      "authKey": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{43}$"
+      },
+      "vaultKey": {
+        "type": "string",
+        "pattern": "^v1\\.[A-Za-z0-9_-]{16}\\.[A-Za-z0-9_-]{64}$"
+      },
+      "turnstile": {
+        "type": "string",
+        "maxLength": 4096
+      }
+    }
+  },
+  "account.login": {
+    "type": "object",
+    "required": [
+      "email",
+      "authKey"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "email": {
+        "type": "string",
+        "maxLength": 254
+      },
+      "authKey": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{43}$"
+      },
+      "turnstile": {
+        "type": "string",
+        "maxLength": 4096
+      }
+    }
+  },
+  "account.device": {
+    "type": "object",
+    "required": [
+      "name"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "type": "string",
+        "maxLength": 80
+      }
+    }
+  },
+  "account.verify": {
+    "type": "object",
+    "required": [
+      "token"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "token": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{43}$"
+      }
+    }
+  },
+  "account.email": {
+    "type": "object",
+    "required": [
+      "email"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "email": {
+        "type": "string",
+        "maxLength": 254
+      },
+      "turnstile": {
+        "type": "string",
+        "maxLength": 4096
+      }
+    }
+  },
+  "account.reset": {
+    "type": "object",
+    "required": [
+      "token",
+      "email",
+      "authKey",
+      "vaultKey"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "email": {
+        "type": "string",
+        "maxLength": 254
+      },
+      "token": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{43}$"
+      },
+      "authKey": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{43}$"
+      },
+      "vaultKey": {
+        "type": "string",
+        "pattern": "^v1\\.[A-Za-z0-9_-]{16}\\.[A-Za-z0-9_-]{64}$"
+      }
+    }
+  },
+  "account.changePassword": {
+    "type": "object",
+    "required": [
+      "authKey",
+      "newAuthKey",
+      "vaultKey"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "authKey": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{43}$"
+      },
+      "newAuthKey": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{43}$"
+      },
+      "vaultKey": {
+        "type": "string",
+        "pattern": "^v1\\.[A-Za-z0-9_-]{16}\\.[A-Za-z0-9_-]{64}$"
+      }
+    }
+  },
+  "account.password": {
+    "type": "object",
+    "required": [
+      "authKey"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "authKey": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{43}$"
+      }
+    }
+  },
+  "ads.event": {
+    "type": "object",
+    "required": [
+      "eventId",
+      "adId",
+      "placement",
+      "kind"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "eventId": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{16,64}$"
+      },
+      "adId": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]{1,64}$"
+      },
+      "placement": {
+        "type": "string",
+        "enum": [
+          "ntp",
+          "notification"
+        ]
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "view",
+          "click"
+        ]
+      },
+      "at": {
+        "type": "integer"
+      }
+    }
+  }
+}

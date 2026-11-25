@@ -1,0 +1,15 @@
+// tizcat-wallet: JibWallet's part of the server, a placeholder until
+// JibWallet is designed. Reached through api.tizcat.com (/v1/wallet/...).
+// Deploy: servers\scripts\deploy.ps1 wallet
+{
+  "$schema": "https://unpkg.com/wrangler@4.157.0/config-schema.json",
+  "name": "tizcat-wallet",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-18",
+  "workers_dev": false,
+  "preview_urls": false,
+  "kv_namespaces": [
+    { "binding": "CONFIG", "id": "95adc45d9019496786dd8681f45e33fc" }
+  ],
+  "observability": { "enabled": true }
+}

@@ -1,0 +1,76 @@
+/* The TizCat sync page, in TizCat's colors (as the Rewards panel). */
+:root {
+  --gold: #d9a43a;
+  --gold-strong: #b9821c;
+  --navy: #1c2b4a;
+  --bg: #f6f4ef;
+  --card: #ffffff;
+  --text: #1d2433;
+  --muted: #5d6677;
+  --line: #e3dfd6;
+  --danger: #b3261e;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171f; --card: #1d222d; --text: #e8eaef; --muted: #a3abb9; --line: #2f3542;
+    --gold-strong: #d9a43a; --danger: #f2827a;
+  }
+}
+
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+.page { max-width: 640px; margin: 0 auto; padding: 32px 16px 48px; }
+.head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.head h1 { font-size: 22px; margin: 0; }
+.head .sub { margin: 2px 0 0; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+h2 { font-size: 15px; margin: 0 0 10px; }
+.label { font-weight: 600; }
+.sub { color: var(--muted); }
+p { margin: 0 0 10px; }
+p:last-child { margin-bottom: 0; }
+a { color: var(--gold-strong); }
+
+.status-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.status-row .error { color: var(--danger); }
+
+.kinds { list-style: none; margin: 0 0 12px; padding: 0; }
+.kinds li { border-top: 1px solid var(--line); }
+.kinds li:first-child { border-top: 0; }
+.kinds label { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 10px 0; cursor: pointer; }
+.kinds input { width: 36px; height: 20px; accent-color: var(--gold); cursor: pointer; flex: none; }
+.lock { font-size: 13px; }
+
+button, .button {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--navy);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+@media (prefers-color-scheme: dark) { button, .button { background: var(--gold); color: #1d2433; } }
+button.secondary, .button.secondary { background: transparent; color: var(--text); border-color: var(--line); }
+button:disabled { opacity: 0.6; cursor: progress; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.actions .sub { flex-basis: 100%; margin: 4px 0 0; font-size: 13px; }

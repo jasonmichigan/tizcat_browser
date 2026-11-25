@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TizCat Rewards</title>
+  <link rel="stylesheet" href="rewards.css">
+  <script type="module" src="rewards.js"></script>
+</head>
+<body>
+  <!-- The toolbar panel, as Brave's Rewards panel. -->
+  <header class="head">
+    <img src="icons/icon_32.png" width="24" height="24" alt="">
+    <h1>TizCat Rewards</h1>
+  </header>
+
+  <section class="row">
+    <label class="switch-row">
+      <span>
+        <span class="label">Rewards</span>
+        <span id="state-text" class="sub"></span>
+      </span>
+      <input id="rewards-switch" type="checkbox" role="switch">
+    </label>
+  </section>
+
+  <section class="row points">
+    <div id="points" class="big">0</div>
+    <div id="points-text" class="sub"></div>
+  </section>
+
+  <section id="ads-row" class="row">
+    <label class="select-row">
+      <span class="label">Notification ads an hour</span>
+      <select id="ads-per-hour"></select>
+    </label>
+    <p class="sub">Shown only while you are at the computer. A sponsored picture also appears on
+      some New Tab pages.</p>
+  </section>
+
+  <section class="row">
+    <div class="label">TizCat account and sync</div>
+    <div id="account-text" class="sub"></div>
+    <a id="account-link" href="https://tizcat.com/go/account" target="_blank">Log in or create an account</a>
+    <a id="sync-link" href="sync.html" target="_blank" hidden>Sync settings</a>
+  </section>
+
+  <section class="row">
+    <div class="label" id="wallet-name">JibWallet</div>
+    <div class="sub">Coming soon. Until then your points wait in your account.
+      <a href="https://tizcat.com/go/wallet" target="_blank">Learn more</a></div>
+  </section>
+
+  <footer class="foot">
+    <a href="https://tizcat.com/go/rewards" target="_blank">How Rewards works</a>
+    <a href="https://tizcat.com/go/privacy" target="_blank">Privacy</a>
+  </footer>
+</body>
+</html>

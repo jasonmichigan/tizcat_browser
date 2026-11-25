@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "features": {
+    "signup": true,
+    "rewards": true,
+    "ntpSponsored": true,
+    "notificationAds": true,
+    "turnstile": false,
+    "email": true,
+    "sync": true
+  },
+  "email": {
+    "provider": "cloudflare",
+    "from": { "name": "TizCat", "address": "account@tizcat.com" }
+  },
+  "ads": {
+    "ntpSponsoredEvery": 4,
+    "notificationsPerHourDefault": 2,
+    "notificationsPerHourChoices": [0, 1, 2, 3, 4, 5, 10],
+    "catalogRefreshMinutes": 60
+  },
+  "rewards": {
+    "points": {
+      "ntp.view": 1,
+      "notification.view": 2,
+      "notification.click": 5
+    },
+    "dailyEventsPerDevice": 100
+  },
+  "coin": {
+    "name": "JibCoin",
+    "symbol": null,
+    "network": "solana",
+    "mint": null,
+    "pointsPerCoin": null,
+    "payouts": false
+  },
+  "wallet": {
+    "name": "JibWallet",
+    "status": "coming"
+  },
+  "go": {
+    "account": "https://account.tizcat.com/",
+    "wallet": "https://www.tizcat.com/wallet",
+    "rewards": "https://www.tizcat.com/rewards",
+    "jibcoin": "https://www.tizcat.com/jibcoin",
+    "whitepaper": "https://www.tizcat.com/whitepaper",
+    "privacy": "https://www.tizcat.com/privacy",
+    "terms": "https://www.tizcat.com/terms",
+    "help": "https://www.tizcat.com/help"
+  }
+}

@@ -1,0 +1,47 @@
+/* The TizCat Rewards panel (toolbar popup), in TizCat's colors. */
+:root {
+  --gold: #d9a43a;
+  --gold-strong: #b9821c;
+  --bg: #ffffff;
+  --text: #1d2433;
+  --muted: #5d6677;
+  --line: #e3dfd6;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1d222d; --text: #e8eaef; --muted: #a3abb9; --line: #2f3542; --gold-strong: #d9a43a; }
+}
+
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  width: 320px;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+.head { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; }
+.head h1 { font-size: 15px; margin: 0; }
+
+.row { padding: 10px 16px; border-top: 1px solid var(--line); }
+.label { font-weight: 600; }
+.sub { display: block; color: var(--muted); }
+.row p.sub { margin: 6px 0 0; }
+
+.switch-row, .select-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.switch-row input { width: 36px; height: 20px; accent-color: var(--gold); cursor: pointer; }
+select { font: inherit; padding: 2px 6px; }
+
+.points .big { font-size: 28px; font-weight: 700; color: var(--gold-strong); }
+
+a { color: var(--gold-strong); }
+#account-link + #sync-link { margin-left: 12px; }
+.foot { display: flex; gap: 16px; padding: 10px 16px 14px; border-top: 1px solid var(--line); }

@@ -1,0 +1,171 @@
+/* TizCat account site. The colors are TizCat's (the gold cheetah with navy
+   lines); www.tizcat.com shares them, so a redesign changes both. */
+:root {
+  --gold: #d9a43a;
+  --gold-strong: #b9821c;
+  --navy: #1c2b4a;
+  --bg: #f6f4ef;
+  --card: #ffffff;
+  --text: #1d2433;
+  --muted: #5d6677;
+  --line: #e3dfd6;
+  --danger: #b3261e;
+  --focus: #2f6fdb;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171f;
+    --card: #1d222d;
+    --text: #e8eaef;
+    --muted: #a3abb9;
+    --line: #2f3542;
+    --danger: #f2827a;
+    --focus: #8ab4f8;
+  }
+}
+
+[hidden] { display: none !important; }
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+a { color: var(--gold-strong); }
+@media (prefers-color-scheme: dark) { a { color: var(--gold); } }
+
+.top { padding: 16px 24px; }
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px 48px;
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 28px;
+}
+
+h1 { font-size: 22px; margin: 0 0 16px; }
+h2 { font-size: 15px; margin: 24px 0 8px; }
+.muted { color: var(--muted); }
+.hint { color: var(--muted); font-weight: 400; }
+.note {
+  background: color-mix(in srgb, var(--gold) 15%, transparent);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+form { display: flex; flex-direction: column; gap: 14px; }
+label { display: flex; flex-direction: column; gap: 6px; font-weight: 500; }
+input {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+}
+input:focus-visible, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--navy);
+  color: #fff;
+  cursor: pointer;
+}
+button:disabled { opacity: 0.6; cursor: progress; }
+button.secondary { background: transparent; color: var(--text); border-color: var(--line); }
+button.danger { background: transparent; color: var(--danger); border-color: var(--line); }
+@media (prefers-color-scheme: dark) {
+  button { background: var(--gold); color: #1d2433; }
+}
+
+.message { color: var(--danger); min-height: 1.5em; margin: 0; }
+.message.ok { color: inherit; }
+.message:empty { min-height: 0; }
+.switch { margin: 18px 0 0; }
+.small { font-size: 13px; margin: 0; }
+.forgot { margin: -6px 0 0; font-size: 14px; }
+.card.wide { max-width: 560px; }
+
+/* A password field with its Show button inside the same row. */
+.password-box { display: flex; gap: 8px; }
+.password-box input { flex: 1; min-width: 0; }
+.password-box button { padding: 6px 12px; font-weight: 500; }
+
+/* A checkbox with its words beside it. */
+label.check { flex-direction: row; align-items: flex-start; gap: 10px; font-weight: 400; }
+label.check input { margin-top: 4px; }
+
+/* A link that looks like a quiet button. */
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+form.inline { margin: 8px 0; }
+form + form, #password-form, #delete-form { margin-top: 12px; }
+.small-button { margin-top: 10px; padding: 6px 14px; font-weight: 500; }
+
+.devices { list-style: none; padding: 0; margin: 0; }
+.devices li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.devices li:first-child { border-top: 0; }
+.devices button { padding: 4px 12px; font-weight: 500; }
+
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+.actions.tight { margin-top: 8px; }
+
+.bottom {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  padding: 20px;
+  font-size: 13px;
+}
+.bottom a { color: var(--muted); }

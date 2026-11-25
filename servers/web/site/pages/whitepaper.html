@@ -1,0 +1,107 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Whitepaper <span class="badge gold">Version 0.1</span></span>
+    <h1>JibCoin whitepaper</h1>
+    <p class="lead">JibCoin's design: what it is for, how it is earned and spent, and the rules that protect the people who hold it. Nothing here is an offer to sell anything or an invitation to invest, and it makes no promise about value, price, listing or returns.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container doc">
+    <nav class="doc-toc" aria-label="Sections">
+      <strong>Contents</strong>
+      <a href="#abstract">1. Abstract</a>
+      <a href="#problem">2. The problem</a>
+      <a href="#principles">3. Principles</a>
+      <a href="#design">4. Token design</a>
+      <a href="#earning">5. Earning JibCoin</a>
+      <a href="#spending">6. Spending JibCoin</a>
+      <a href="#payouts">7. Payouts</a>
+      <a href="#governance">8. Governance</a>
+      <a href="#legal">9. Legal questions</a>
+      <a href="#conditions">10. Safeguards</a>
+      <a href="#risks">11. Risks</a>
+    </nav>
+    <article class="doc-body">
+      <h2 id="abstract">1. Abstract</h2>
+      <p>JibCoin is designed as a digital token on the Solana network, to reward people for the attention they choose to give to advertising in the TizCat browser and to be spent inside TizCat on AI and other services. Its design is closed-loop first: earned by attention, spent on things TizCat otherwise charges for, with no reliance on outside markets for its usefulness.</p>
+
+      <h2 id="problem">2. The problem</h2>
+      <p>Online advertising pays the sites and the networks, tracks the people it reaches, and gives those people nothing. At the same time, AI assistance costs real money every time it is used. People want both privacy and AI, and today they usually pay for one with the other.</p>
+
+      <h2 id="principles">3. Principles</h2>
+      <ul class="check-list">
+        <li><strong>Utility first.</strong> If an advertiser can pay in dollars for the same campaign, and a person can spend dollars on the same AI, the token has no reason to exist.</li>
+        <li><strong>A closed loop.</strong> Advertisers pay for attention, attention earns JibCoin, JibCoin pays for AI. No money has to be sent to the public at all.</li>
+        <li><strong>Fixed supply.</strong> A token minted for every ad view loses value every month. A fixed supply with a large share reserved for people who earn it is the shape that has worked.</li>
+        <li><strong>Honest communication.</strong> Never an investment, never a price prediction, never a promised listing.</li>
+      </ul>
+
+      <h2 id="design">4. Token design</h2>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><th>Network</th><td>Solana, as a standard SPL token. Many payments can be batched in one transaction.</td></tr>
+            <tr><th>Contract</th><td>The standard, unmodified token program: no custom code, the most common source of costly bugs.</td></tr>
+            <tr><th>Supply</th><td>Fixed. No tokens are added after the supply is minted.</td></tr>
+            <tr><th>Freeze authority</th><td>Disabled.</td></tr>
+            <tr><th>Mint authority</th><td>Either burned after the supply is minted (strongest) or held by a multi-signature group (more flexible), with the choice made public.</td></tr>
+            <tr><th>Audit</th><td>Independent, before deployment, even for a standard token.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure class="figure">
+        <img src="/img/figures/fig7_allocation.webp?v=3" width="1200" height="538" loading="lazy" alt="Allocation of JibCoin's fixed supply.">
+        <figcaption>How the fixed supply is allocated in the current design.</figcaption>
+      </figure>
+
+      <h2 id="earning">5. Earning JibCoin</h2>
+      <p>Rewards points become JibCoin from the user rewards pool, on a published schedule. A person's share follows the identity at the heart of TizCat Rewards: 70 percent of what advertisers actually paid for that person's confirmed views, nothing more. The reconciliation rule holds at every step: everything paid out never exceeds 70 percent of the cash actually received from advertisers.</p>
+
+      <h2 id="spending">6. Spending JibCoin</h2>
+      <p>The uses JibCoin is designed for; at least one of them works from the start:</p>
+      <ul class="check-list">
+        <li><strong>AI credits and premium plans in TizCat</strong>, the closed loop and the most important: a person who spends JibCoin on AI never needs to turn it into cash.</li>
+        <li><strong>A discount for advertisers who pay in JibCoin</strong>, so campaign budgets create demand.</li>
+        <li><strong>A share of other revenue buying JibCoin back into the rewards pool</strong>, if TizCat's other products earn enough to fund it.</li>
+      </ul>
+
+      <h2 id="payouts">7. Payouts</h2>
+      <p>Payouts are batched on Solana, where sending to a hundred thousand people costs on the order of tens of dollars. A minimum payout threshold, identity checks at the moment of withdrawal (never at earning), sanctions screening, and a settlement period of up to sixty days, because advertisers themselves pay with a delay, are stated from the start.</p>
+
+      <h2 id="governance">8. Governance and transparency</h2>
+      <ul class="check-list">
+        <li>Treasury and pool addresses are public, held by multi-signature groups.</li>
+        <li>A regular public report: supply, pool balance, amounts paid out, and the reconciliation against advertising income.</li>
+        <li>Rule changes are announced in advance and never applied to rewards already earned.</li>
+      </ul>
+
+      <h2 id="legal">9. Legal and regulatory questions</h2>
+      <p>The legal questions every reward token has to answer, set out plainly as questions, not as answers.</p>
+      <ul class="check-list">
+        <li><strong>Is it a security?</strong> Under the United States Howey test, a token is an investment contract if people buy in expecting profit from the efforts of others. Giving a token away does not by itself exempt it. A token described purely as a reward spendable on services inside TizCat is a much weaker case than one marketed as an investment. Regulators' positions changed during 2026 and are still being argued.</li>
+        <li><strong>Money transmission.</strong> Distributing tokens can make a platform a money services business in the United States, with registration and anti-money-laundering duties. State licenses are a separate question.</li>
+        <li><strong>Swap fees.</strong> A fee on token swaps inside JibWallet can raise broker and money-transmission questions of its own; the same legal opinion has to cover it before swaps carry a fee.</li>
+        <li><strong>The European Union.</strong> A public offering falls under MiCA, which requires a compliant whitepaper for most tokens. This whitepaper is not that document.</li>
+        <li><strong>Tax and sanctions.</strong> Tokens received are generally income to the recipient; wallet screening and country restrictions are required.</li>
+      </ul>
+
+      <h2 id="conditions">10. Safeguards</h2>
+      <p>Five safeguards stand behind JibCoin, all required: real users and real advertising revenue; a points ledger that is reconciled, month after month; at least one working use from section 6; a written legal opinion that supports the design; and an independent audit of the token, with the mint and freeze decisions published.</p>
+
+      <h2 id="risks">11. Risks</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Risk</th><th>What reduces it</th></tr></thead>
+          <tbody>
+            <tr><td>Too few people use TizCat, so there is no advertising to share</td><td>Make the browser worth keeping first</td></tr>
+            <tr><td>Fraud farms earn more than real people</td><td>Identity at withdrawal, payout delay, device and network checks</td></tr>
+            <tr><td>A regulator treats JibCoin as a security, or TizCat as a money transmitter</td><td>Real revenue and a written legal opinion behind the design; the closed loop</td></tr>
+            <tr><td>The token loses value and people feel paid in nothing</td><td>Fixed supply, a real use, and gift cards or a stablecoin as alternatives</td></tr>
+            <tr><td>People lose their wallet keys</td><td>Clear recovery guidance, hardware wallet support, honest support</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </div>
+</section>

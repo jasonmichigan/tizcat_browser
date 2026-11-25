@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TizCat sync</title>
+  <link rel="icon" href="icons/icon_32.png">
+  <link rel="stylesheet" href="sync.css">
+  <script type="module" src="sync.js"></script>
+</head>
+<body>
+  <main class="page">
+    <header class="head">
+      <img src="icons/icon_48.png" width="40" height="40" alt="">
+      <div>
+        <h1>TizCat sync</h1>
+        <p class="sub">Your bookmarks and settings, the same in every TizCat you sign in to.</p>
+      </div>
+    </header>
+
+    <!-- Signed out -->
+    <section id="off" class="card" hidden>
+      <h2>Sync is off</h2>
+      <p id="off-text">Sign in to your TizCat account to keep your bookmarks, settings and TizCat's own data
+        in your account and bring them to TizCat on another computer.</p>
+      <p><a id="sign-in" class="button" href="https://tizcat.com/go/account" target="_blank">Sign in or create an account</a></p>
+    </section>
+
+    <!-- Signed in -->
+    <section id="on" class="card" hidden>
+      <div class="status-row">
+        <div>
+          <div class="label">Signed in as <span id="email"></span></div>
+          <div id="status" class="sub"></div>
+        </div>
+        <button id="sync-now" type="button">Sync now</button>
+      </div>
+    </section>
+
+    <section id="kinds-card" class="card" hidden>
+      <h2>What to sync</h2>
+      <ul id="kinds" class="kinds"></ul>
+      <p class="sub lock">Encrypted on this computer with a key from your password before it is sent:
+        not even TizCat can read your synced data.</p>
+    </section>
+
+    <section id="actions" class="card actions" hidden>
+      <a class="button secondary" href="https://tizcat.com/go/account" target="_blank">Manage your account</a>
+      <button id="sign-out" type="button" class="secondary">Sign out of this TizCat</button>
+      <p class="sub">Signing out stops syncing here. Your bookmarks and settings stay in this TizCat.</p>
+    </section>
+  </main>
+</body>
+</html>

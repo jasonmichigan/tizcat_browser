@@ -1,0 +1,63 @@
+#!/bin/sh
+# TizCat's guard: git runs this before every commit (core.hooksPath points
+# here) and refuses the commit if it would put a secret or a huge file into
+# the history, which is uploaded to GitHub automatically. Added 2026-11-20,
+# after a GitHub recovery-codes file saved in visuals\ was swept into a
+# commit.
+#
+#   sh scripts/git-hooks/pre-commit --all   checks every file already saved
+#
+# If it blocks a file that is truly harmless, rename the file or change the
+# pattern here; do not skip the check.
+
+check() {  # $1 = file name, $2 = git object holding its contents
+  f=$1
+  lower=$(printf '%s' "$f" | tr 'A-Z' 'a-z')
+  case "$lower" in
+    servers/cloudflare.txt|*recovery*code*|*backup*code*|*.pem|*.key|*.pfx|*.p12|*.kdbx|\
+    *id_rsa*|*id_ed25519*|.env|*/.env|.env.*|*/.env.*|*credential*|*secret*|*password*.txt|*passwords*)
+      echo "BLOCKED: $f looks like a password, key or recovery-code file."
+      return 1 ;;
+  esac
+  size=$(git cat-file -s "$2" 2>/dev/null || echo 0)
+  if [ "$size" -gt 52428800 ]; then
+    echo "BLOCKED: $f is over 50 MB."
+    return 1
+  fi
+  # Private keys and the formats of common access tokens (GitHub, OpenAI and
+  # Anthropic, AWS, Slack, Google).
+  if git cat-file -p "$2" 2>/dev/null | grep -aqE \
+      -e '-----BEGIN ([A-Z]+ )?PRIVATE KEY-----' \
+      -e 'gh[pousr]_[A-Za-z0-9]{36}' -e 'github_pat_[A-Za-z0-9_]{40,}' \
+      -e 'sk-(ant-)?[A-Za-z0-9_-]{32,}' -e 'AKIA[0-9A-Z]{16}' \
+      -e 'xox[abprs]-[A-Za-z0-9-]{10,}' -e 'AIza[0-9A-Za-z_-]{35}'; then
+    echo "BLOCKED: $f contains what looks like a private key or an access token."
+    return 1
+  fi
+  # Recovery codes, printed as lines of short code words (GitHub: abcde-12345).
+  n=$(git cat-file -p "$2" 2>/dev/null | grep -acE '^[[:space:]]*[0-9a-f]{5}-[0-9a-f]{5}[[:space:]]*$')
+  if [ "$n" -ge 4 ]; then
+    echo "BLOCKED: $f looks like a list of recovery codes."
+    return 1
+  fi
+  return 0
+}
+
+fail=0
+if [ "$1" = "--all" ]; then
+  list=$(git ls-files)
+  prefix="HEAD:"
+else
+  list=$(git diff --cached --name-only --diff-filter=ACMR)
+  prefix=":"
+fi
+IFS='
+'
+for f in $list; do
+  check "$f" "$prefix$f" || fail=1
+done
+if [ $fail -ne 0 ]; then
+  echo "Nothing was committed. Take these out (git restore --staged <file>) and add them to .gitignore."
+  exit 1
+fi
+exit 0

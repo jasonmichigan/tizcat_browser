@@ -1,0 +1,53 @@
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Developers</span>
+    <h1>A platform built to change quickly</h1>
+    <p class="lead">A complete browser takes hours to rebuild, so TizCat keeps only small, permanent hooks in the browser. Everything likely to change lives in a module, copied in at every start, or on a server, deployed in seconds, one part at a time.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Part</th><th>Where it runs</th><th>Updates</th></tr></thead>
+        <tbody>
+          <tr><td>Website</td><td>www.tizcat.com</td><td>in seconds, on its own</td></tr>
+          <tr><td>Accounts</td><td>account.tizcat.com</td><td>in seconds, on its own</td></tr>
+          <tr><td>Front door</td><td>api.tizcat.com</td><td>in seconds, on its own</td></tr>
+          <tr><td>Ads, Rewards points, JibWallet</td><td>behind api.tizcat.com, unreachable from the internet</td><td>in seconds, each on its own</td></tr>
+          <tr><td>Live settings</td><td>a settings store at the edge</td><td>in seconds, with nothing redeployed</td></tr>
+          <tr><td>TizCat Services, Yuzal</td><td>inside TizCat, as built-in modules</td><td>with a restart of TizCat</td></tr>
+          <tr><td>Browser hooks</td><td>TizCat itself</td><td>with a rebuild, rarely</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The parts agree through a written, versioned contract: every request each server accepts is defined once, the servers check against it, and so do the tests. A change that keeps the contract is safe for every part; a change that breaks it becomes a new version, with the old one kept until nothing uses it.</p>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container split">
+    <div>
+      <span class="eyebrow">Public calls</span>
+      <h2>api.tizcat.com/v1</h2>
+      <ul class="check-list">
+        <li><code>GET /v1/health</code>: each service's version and state</li>
+        <li><code>GET /v1/config</code>: the public settings TizCat uses</li>
+        <li><code>GET /v1/ads/catalog</code>: the ads currently running</li>
+        <li><code>GET /v1/wallet/info</code>: JibWallet and JibCoin's state</li>
+      </ul>
+      <p>Full API documentation is coming. Security reports and developer questions: <a href="mailto:hamid@tizcat.com">hamid@tizcat.com</a>.</p>
+    </div>
+    <div class="card">
+      <h3>Security, by default</h3>
+      <ul class="check-list">
+        <li>HTTPS everywhere, certificates renewed automatically, plain http redirected</li>
+        <li>HSTS for a year on tizcat.com and every subdomain</li>
+        <li>A strict content security policy on every page; no framing by other sites</li>
+        <li>Account passwords stretched with 600,000 rounds in the browser; only a secret-keyed check value is stored</li>
+        <li>Links that lead elsewhere follow only tizcat.com addresses</li>
+      </ul>
+    </div>
+  </div>
+</section>

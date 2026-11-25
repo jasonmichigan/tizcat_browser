@@ -1,0 +1,32 @@
+// tizcat-ads: the ad catalog and ad events. No address of its own: reached
+// through api.tizcat.com (/v1/ads/...). Ad pictures are this Worker's static
+// files (ads\media), so adding an ad is a migration plus a picture, then
+// `deploy.ps1 ads`.
+{
+  "$schema": "https://unpkg.com/wrangler@4.157.0/config-schema.json",
+  "name": "tizcat-ads",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-18",
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./media",
+    "binding": "MEDIA",
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tizcat-ads",
+      "database_id": "0ee3b307-2e53-43da-9542-10ba7de0ac63",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "services": [
+    { "binding": "REWARDS", "service": "tizcat-rewards" }
+  ],
+  "kv_namespaces": [
+    { "binding": "CONFIG", "id": "95adc45d9019496786dd8681f45e33fc" }
+  ],
+  "observability": { "enabled": true }
+}

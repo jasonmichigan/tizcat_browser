@@ -1,0 +1,43 @@
+{
+  "$comment": "www.tizcat.com's pages. Each page is one file in pages\\ holding only its content; layout.html wraps it (header, menu, footer) and css\\site.css styles everything. To add a page: write pages\\<name>.html and add it to \"pages\" (and to \"menu\" or a \"footer\" column if it should be linked there). To redesign: change layout.html and css\\site.css. Then: servers\\scripts\\deploy.ps1 web. Raise assetVersion when css, js or images change, so browsers fetch the new ones. \"moved\" sends an old page address to its new one for good (301), so old links keep working.",
+  "name": "TizCat",
+  "assetVersion": "9",
+  "moved": { "/lovona": "/yuzal" },
+  "menu": ["/browser", "/yuzal", "/rewards", "/wallet", "/jibcoin", "/team"],
+  "footer": [
+    { "title": "Product", "links": ["/browser", "/yuzal", "/rewards", "/download"] },
+    { "title": "JibCoin", "links": ["/wallet", "/jibcoin", "/whitepaper"] },
+    { "title": "Company", "links": ["/about", "/team", "/developers"] },
+    { "title": "Support", "links": ["/help", "/privacy", "/terms"] }
+  ],
+  "pages": [
+    { "path": "/", "file": "home.html", "title": "TizCat, the fast browser that keeps your secrets at home", "label": "Home",
+      "description": "TizCat is a fast web browser with Yuzal, an AI agent that never sees your passwords, cloud AI or a free local engine for private documents, and TizCat Rewards." },
+    { "path": "/browser", "file": "browser.html", "title": "The TizCat browser", "label": "Browser",
+      "description": "A complete browser, compiled for speed, that brings your bookmarks and passwords from other browsers, with a New Tab page of its own." },
+    { "path": "/yuzal", "file": "yuzal.html", "title": "Yuzal, the AI agent that keeps your secrets at home", "label": "Yuzal",
+      "description": "Yuzal reads and works with the page you are on, with cloud AI (a TizCat Cloud subscription or your own Gemini, ChatGPT or Claude key) or a free local engine for private documents, where nothing leaves your laptop." },
+    { "path": "/rewards", "file": "rewards.html", "title": "TizCat Rewards", "label": "Rewards",
+      "description": "Opt in to see ads on TizCat's own pages and keep 70 percent of what advertisers pay. Ads are matched inside your browser." },
+    { "path": "/wallet", "file": "wallet.html", "title": "JibWallet", "label": "JibWallet",
+      "description": "JibWallet is TizCat's self-custody wallet: your keys stay on your device." },
+    { "path": "/jibcoin", "file": "jibcoin.html", "title": "JibCoin", "label": "JibCoin",
+      "description": "JibCoin is TizCat's reward token on Solana, designed to be earned by attention and spent inside TizCat." },
+    { "path": "/whitepaper", "file": "whitepaper.html", "title": "JibCoin whitepaper, version 0.1", "label": "Whitepaper",
+      "description": "JibCoin's design: principles, token design, earning, spending, payouts, governance and the legal questions." },
+    { "path": "/team", "file": "team.html", "title": "The TizCat team", "label": "Team",
+      "description": "The people behind TizCat: Ramona, Business Manager, and Hamid, Developer Manager." },
+    { "path": "/about", "file": "about.html", "title": "About TizCat", "label": "About",
+      "description": "Where the name TizCat comes from, why it was rebuilt as a complete browser, and where it is going." },
+    { "path": "/download", "file": "download.html", "title": "Download TizCat", "label": "Download",
+      "description": "TizCat for Windows is being prepared for its first public release." },
+    { "path": "/developers", "file": "developers.html", "title": "TizCat API and platform", "label": "Developers",
+      "description": "How TizCat's modular platform is built, and the public calls of api.tizcat.com." },
+    { "path": "/help", "file": "help.html", "title": "TizCat help", "label": "Help",
+      "description": "Answers about TizCat, your account, Yuzal, Rewards and importing from other browsers." },
+    { "path": "/privacy", "file": "privacy.html", "title": "Privacy", "label": "Privacy",
+      "description": "What TizCat and its servers keep about you, where it lives and who can see it." },
+    { "path": "/terms", "file": "terms.html", "title": "Terms", "label": "Terms",
+      "description": "The terms for using TizCat and its services." }
+  ]
+}

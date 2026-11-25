@@ -1,0 +1,29 @@
+// tizcat-sync: what TizCat browsers sync (bookmarks, settings, JibWallet's
+// data, more kinds later), encrypted on the device. No address of its own:
+// reached through api.tizcat.com (/v1/sync/...) and, for wipe and summary,
+// by the account part over a service binding.
+// Deploy: servers\scripts\deploy.ps1 sync
+{
+  "$schema": "https://unpkg.com/wrangler@4.157.0/config-schema.json",
+  "name": "tizcat-sync",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-18",
+  "workers_dev": false,
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tizcat-sync",
+      "database_id": "5e3fee66-4fc6-4d0d-9da4-fe2f2479c64a",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    { "binding": "CONFIG", "id": "95adc45d9019496786dd8681f45e33fc" }
+  ],
+  // At most 60 sync calls a minute from one TizCat (a normal sync is a few).
+  "ratelimits": [
+    { "name": "SYNC_LIMITER", "namespace_id": "4103", "simple": { "limit": 60, "period": 60 } }
+  ],
+  "observability": { "enabled": true }
+}

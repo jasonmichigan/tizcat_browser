@@ -1,0 +1,666 @@
+/* Yuzal's side panel in Jib. Every rule below is copied from Jeep's
+   renderer/ui.css (the panel, its themes and browser colours) so the panel
+   looks the same in both; only the page frame around it is new, because
+   the panel is now the whole page. */
+:root {
+  --bg: #0f1115;
+  --bg2: #1a1e25;
+  --bg3: #232833;
+  --fg: #dfe3ea;
+  --muted: #8b93a3;
+  --jeep: #dc2626;
+  --accent: #e05656;
+  --ok: #55dd77;
+  --warn: #ffaa55;
+  /* The light on Yuzal's tab. Fixed on purpose: a status light must read
+     the same in every theme and every browser color, so these are never
+     overridden below. */
+  --light-on: #35c759;      /* attached, reading */
+  /* Yuzal's mark once the chat can take a prompt. Two reds, because the
+     letters sit on two surfaces of opposite lightness: the nav row at rest
+     (dark in a dark palette) and the hover pill under the pointer (light in
+     every palette). One red cannot read on both. */
+  --ai-lit: #e02424;
+  --ai-lit-pill: #a81414;   /* deeper, for the light hover pill */
+  --star-on: #f0a500;       /* bookmarked */
+  --light-busy: #ff4d4f;    /* running a turn */
+  --toolbar-h: 116px;   /* tab strip (38) + nav row (46) + bookmark bar (32) */
+  --panel-w: 380px;
+
+  /* Khaki shades for the top browser chrome (tab strip + address bar bands) */
+  --khaki-dark: #6f6638;
+  --khaki: #8a7d4a;
+  --khaki-mid: #a2935a;
+  --khaki-light: #c7bb86;
+  --khaki-pale: #e8e0c2;
+  --khaki-ink: #2b2710;
+  --khaki-ink-soft: #4a4324;
+  /* Resting color for an icon drawn straight on the nav bar: it must
+     contrast with --khaki-mid, so dark-chrome themes override it light. */
+  --chrome-icon: #3b351a;
+
+  /* Dirt-yellow (ochre / mustard) shades for the Yuzal chat panel */
+  --dirt: #c9a92e;          /* reference accent (mustard) */
+  --dirt-deep: #574b16;     /* panel background (dark ochre) */
+  --dirt-mid: #877420;      /* header / buttons band */
+  --dirt-bubble: #9a842a;   /* assistant bubble */
+  --dirt-user: #d8c054;     /* user bubble (bright mustard) */
+  --dirt-pale: #efe7c4;     /* input field */
+  --dirt-ink: #2c2606;      /* dark text on pale */
+  --dirt-line: #443a10;     /* borders */
+  --dirt-soft: #e6dcae;     /* muted light text */
+  --dirt-fg: #f3ecd0;       /* text on the panel's dark surfaces */
+
+  /* Text on an accent surface (--jeep / --dirt). A browser color with a
+     dark accent flips this to white. */
+  --accent-ink: #2c2606;
+  /* Ink and hover on the tab strip itself - the window buttons and the "+".
+     They sit on --khaki-dark, which a light browser color makes LIGHT, so
+     they cannot simply borrow --khaki-pale. Pointing at it by default keeps
+     every existing theme exactly as it was. */
+  --strip-ink: var(--khaki-pale);
+  --strip-hover: rgba(255, 255, 255, .16);
+  /* Bookmark bar: white by default, until a dark browser color says
+     otherwise - a white band across a dark window reads as a mistake. */
+  --bm-bg: #ffffff;
+  --bm-fg: #3c4043;
+  --bm-line: #dadce0;
+  --bm-hover: rgba(60, 64, 67, .08);
+}
+
+* { box-sizing: border-box; }
+/* Generic hide. The three scoped #id.hidden rules below predate it and
+   still work; the settings panes and the bookmarks bar need this one. */
+.hidden { display: none !important; }
+html, body {
+  margin: 0; height: 100vh; overflow: hidden;
+  background: var(--dirt-deep); color: var(--fg);
+  font-family: system-ui, "Segoe UI", sans-serif; font-size: 14px;
+}
+/* The panel fills the side panel Chromium gives it; Chromium sizes it. */
+#panel { width: 100% !important; border-left: none !important; }
+@keyframes tabdot { 50% { opacity: .35; } }
+
+/* The Ai settings icon: three faders with a spark for the middle knob.
+   Larger than the panel's other icons because it carries several shapes.
+   The tracks stop short of their knobs rather than running underneath
+   them, which is what keeps it clean at 18px - so the knobs cannot slide
+   without the gaps going wrong, and they stay put. */
+#btn-aiset svg { width: 18px; height: 18px; }
+.aiset-icon .tracks {
+  fill: none; stroke: currentColor; stroke-width: 1.6;   /* butt caps: a round
+    cap would reach into the gap and touch the spark's right-hand tip */
+}
+.aiset-icon .knob { fill: currentColor; stroke: none; }
+.aiset-icon .spark {
+  fill: var(--ai-lit); stroke: none;
+  transform-box: view-box; transform-origin: 12.9px 12px;
+  transition: transform .22s cubic-bezier(.34, 1.3, .64, 1);
+}
+/* The whole-icon rotate that the gear buttons share would spin the faders,
+   which would be nonsense. Only the middle knob answers the pointer. */
+#btn-aiset:hover .aiset-icon,
+#btn-aiset:active .aiset-icon { transform: none; }
+#btn-aiset:hover .spark { transform: scale(1.22); }
+#btn-aiset:active .spark { transform: scale(.95); }
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal {
+  background: var(--bg2); color: var(--fg); border: 1px solid #000; border-radius: 10px;
+  padding: 16px; width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,.5);
+}
+.modal-msg { margin-bottom: 8px; font-size: 14px; font-weight: 600; }
+.modal-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.modal-btns button { background: var(--bg3); color: var(--fg); border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.modal-btns .primary { background: var(--jeep); color: #fff; }
+.threads-modal { width: 420px; max-height: 72vh; display: flex; flex-direction: column; }
+.threads-modal .th-new { align-self: flex-start; margin: 6px 0 10px; }
+.thread-list { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.thread-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+               background: var(--bg3); border-radius: 8px; cursor: pointer; }
+.thread-item:hover { background: #2c333f; }
+.th-main { flex: 1; overflow: hidden; }
+.th-title { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.th-meta { font-size: 11px; color: var(--muted); }
+.th-del { opacity: .5; cursor: pointer; padding: 0 4px; }
+.th-del:hover { opacity: 1; }
+.th-empty { color: var(--muted); font-size: 12px; padding: 10px 4px; }
+
+/* mic meter + device picker (voice mode) */
+#voicebar { display: flex; align-items: center; gap: 8px; padding: 4px 12px; }
+#voicebar.hidden { display: none; }
+.vb-mic { font-size: 14px; }
+#mic-device {
+  background: var(--dirt-deep); color: var(--dirt-fg); border: 1px solid var(--dirt-line);
+  border-radius: 6px; font-size: 12px; max-width: 150px; padding: 3px 4px;
+}
+#mic-meter { flex: 1; height: 8px; background: var(--dirt-line); border-radius: 4px; overflow: hidden; }
+#mic-meter-fill { height: 100%; width: 0%; background: var(--dirt-user); transition: width .05s linear; }
+
+/* ---------- side panel (Yuzal — dirt yellow) ---------- */
+#panel {
+  width: var(--panel-w); height: 100%; background: var(--dirt-deep); color: #f3ecd0;
+  border-left: 1px solid var(--dirt-line); display: flex; flex-direction: column;
+}
+#panel.hidden { display: none; }
+#panelhead {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+  background: var(--dirt-mid); border-bottom: 1px solid var(--dirt-line);
+}
+.brand { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
+/* engine selector on its own row so the 🕘 / ⚙ buttons are always visible */
+#enginebar { padding: 6px 12px; background: var(--dirt-mid); border-bottom: 1px solid var(--dirt-line); }
+#enginebar #engine { width: 100%; }
+/* Yuzal's mark: the AI logo, the half-cheetah, half-network face (in Jeep
+   it was the letters "Ai"). Gray and dim while the backend is still
+   starting, in full color once the chat can take a prompt. */
+.ai-mark {
+  display: inline-block; width: 22px; height: 22px;
+  vertical-align: middle; user-select: none;
+  filter: grayscale(1); opacity: .55;
+  transition: filter .25s ease, opacity .25s ease;
+}
+.ai-mark.ready { filter: none; opacity: 1; }
+.brand { font-weight: 600; }
+.badge {
+  font-size: 11px; background: var(--dirt-deep); color: var(--dirt-soft);
+  padding: 2px 6px; border-radius: 6px;
+}
+/* scheduled-task clock: shows runs done + countdown to the next run */
+.sched-clock {
+  font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap;
+  background: var(--dirt-deep); color: var(--dirt-fg); border: 1px solid var(--dirt-line);
+  padding: 2px 7px; border-radius: 10px;
+}
+.sched-clock.hidden { display: none; }
+.light { margin-left: auto; color: var(--warn); }
+.light.ok { color: var(--ok); }
+.light.err { color: var(--jeep); }
+.light.loading { color: var(--warn); }   /* Yuzal still starting up */
+#engine {
+  background: var(--dirt-deep); color: var(--dirt-fg); border: 1px solid var(--dirt-line);
+  border-radius: 6px; padding: 4px 6px;
+  /* A point and a half larger than the panel's other controls, purely so the
+     counted glyphs beside each model are big enough to tell apart. At 12px an
+     emoji is a smudge whatever you choose. */
+  font-size: 13.5px;
+}
+.panelbtn {
+  background: var(--dirt-deep); color: var(--dirt-fg); border: 1px solid var(--dirt-line);
+  border-radius: 6px; width: 28px; height: 26px; cursor: pointer; font-size: 14px;
+}
+.panelbtn:hover { background: var(--dirt-mid); }
+
+/* Shown only when Yuzal's tab is not the tab you are looking at. It names
+   the page it is on and offers the one thing you would want: bring it here. */
+#agent-tab-bar {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+  background: var(--dirt-deep); border-bottom: 1px solid var(--dirt-line);
+  font-size: 12px; color: var(--dirt-soft);
+}
+#agent-tab-bar.hidden { display: none; }
+.atb-dot {
+  flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--light-on); box-shadow: 0 0 5px var(--light-on);
+}
+#agent-tab-bar.busy .atb-dot {
+  background: var(--light-busy); box-shadow: 0 0 6px var(--light-busy);
+  animation: tabdot 1.1s ease-in-out infinite;
+}
+.atb-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.atb-move {
+  flex: 0 0 auto; background: var(--dirt-mid); color: var(--dirt-fg);
+  border: 1px solid var(--dirt-line); border-radius: 6px;
+  padding: 3px 9px; cursor: pointer; font: inherit; font-size: 12px;
+}
+.atb-move:hover { background: var(--dirt); color: var(--accent-ink); }
+
+#chat { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.bubble { max-width: 92%; padding: 8px 12px; border-radius: 12px; line-height: 1.45; white-space: pre-wrap; word-wrap: break-word; }
+.bubble.user { align-self: flex-end; background: var(--dirt-user); color: var(--dirt-ink); border-bottom-right-radius: 4px; }
+.bubble.assistant { align-self: flex-start; background: var(--dirt-bubble); color: var(--dirt-fg); border-bottom-left-radius: 4px; }
+.bubble.rtl { direction: rtl; text-align: right; }
+/* centered system note (e.g. AI-engine change) */
+.bubble.note {
+  align-self: center; max-width: 96%; text-align: center;
+  background: transparent; color: var(--dirt-soft); font-size: 12px;
+  padding: 2px 8px; border: 1px solid var(--dirt-line); border-radius: 10px;
+}
+.receipt { align-self: flex-start; font-size: 12px; color: var(--dirt-soft); font-family: ui-monospace, monospace; }
+.receipt.bad { color: var(--warn); }
+.dl-row { align-self: flex-start; }
+.dl-btn { background: var(--dirt); color: var(--accent-ink); border: none; border-radius: 8px;
+          padding: 7px 14px; cursor: pointer; font-weight: 600; font-size: 13px; }
+.dl-btn:hover { filter: brightness(1.12); }
+.dl-btn:disabled { opacity: .8; cursor: default; }
+.file-link { cursor: pointer; text-decoration: underline; }
+.file-link:hover { opacity: .85; }
+
+#status {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 12px; min-height: 20px; font-size: 12px; color: var(--dirt-soft);
+}
+#status-text { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The elapsed clock. Tabular figures so the line does not twitch sideways
+   every second, which is what a proportional font does to a counter. */
+#status-timer {
+  flex: 0 0 auto; font-variant-numeric: tabular-nums;
+  font-size: 11px; letter-spacing: .02em;
+  padding: 1px 6px; border-radius: 9px;
+  background: var(--dirt-deep); border: 1px solid var(--dirt-line);
+  color: var(--dirt-soft); opacity: .85;
+}
+/* Still counting, versus the figure left behind for a moment after the answer
+   lands - dimmer, so a finished number is not mistaken for a running one. */
+#status-timer.running { color: var(--jeep); opacity: 1; }
+#status-timer.settled { opacity: .55; }
+
+#composer { padding: 10px 12px; background: var(--dirt-mid); border-top: 1px solid var(--dirt-line); }
+#attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+#attachments:empty { display: none; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 220px;
+  background: var(--dirt-deep); color: var(--dirt-fg); border: 1px solid var(--dirt-line);
+  border-radius: 12px; padding: 3px 8px; font-size: 12px;
+}
+.chip .chip-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip .cx { cursor: pointer; opacity: .6; }
+.chip .cx:hover { opacity: 1; color: var(--jeep); }
+#input {
+  width: 100%; background: var(--dirt-pale); color: var(--dirt-ink); border: 1px solid var(--dirt-line);
+  border-radius: 10px; padding: 8px 10px; outline: none; font-family: inherit;
+}
+#input::placeholder { color: var(--dirt-ink); opacity: .55; }
+#input:focus { border-color: var(--dirt); }
+#composer-btns { display: flex; gap: 6px; margin-top: 8px; }
+#composer-btns button {
+  background: var(--dirt-deep); color: var(--dirt-fg); border: none; border-radius: 8px;
+  height: 34px; padding: 0 12px; cursor: pointer; font-size: 14px;
+}
+#composer-btns button:hover { background: var(--dirt-mid); }
+#btn-send.primary { background: var(--dirt); color: var(--accent-ink); flex: 1; font-weight: 600; }
+#btn-send.primary:hover { filter: brightness(1.12); }
+.toggle.on { background: var(--dirt); color: var(--accent-ink); }
+#btn-mic.on { background: var(--dirt); color: var(--accent-ink); }
+
+
+/* ===================================================================
+   Themes
+   Each theme overrides only the variables that differ from Dark, which
+   stays the base. Web pages are never recolored - a browser that
+   repainted the web would be showing you something other than what is
+   there - so these touch the chrome and the Yuzal panel only.
+   =================================================================== */
+html { font-size: var(--ui-font, 14px); }
+body { font-size: 1rem; }
+
+:root[data-theme="midnight"] {
+  --bg: #080b12; --bg2: #121725; --bg3: #1b2234; --fg: #e6ebf5; --muted: #7e8ba6;
+  --khaki-dark: #2e3550; --khaki: #39415f; --khaki-mid: #454e72; --khaki-light: #8d97bd;
+  --khaki-pale: #d7dcf0; --khaki-ink: #0b0f1c; --khaki-ink-soft: #222a44;
+  --chrome-icon: #ccd4ec;
+  --dirt-deep: #1d2440; --dirt-mid: #2b3357; --dirt-bubble: #333c66; --dirt-user: #5a67a8;
+  --dirt-pale: #e4e8f7; --dirt-ink: #0d1120; --dirt-line: #171d33; --dirt-soft: #b9c2e0;
+}
+:root[data-theme="slate"] {
+  --bg: #15181c; --bg2: #22262c; --bg3: #2e333b; --fg: #dfe3e8; --muted: #8e959e;
+  --khaki-dark: #3a3f46; --khaki: #474d56; --khaki-mid: #565d67; --khaki-light: #9aa2ad;
+  --khaki-pale: #dfe3e8; --khaki-ink: #14171a; --khaki-ink-soft: #2a2e34;
+  --chrome-icon: #e2e6ea;
+  --dirt-deep: #282d34; --dirt-mid: #363c45; --dirt-bubble: #3f4650; --dirt-user: #6b7584;
+  --dirt-pale: #e7eaee; --dirt-ink: #14171a; --dirt-line: #1f2328; --dirt-soft: #c3c9d1;
+}
+:root[data-theme="light"] {
+  --bg: #f4f5f7; --bg2: #ffffff; --bg3: #e8eaee; --fg: #16191f; --muted: #5d646f;
+  --khaki-dark: #b9ad77; --khaki: #cdc08a; --khaki-mid: #ddd2a4; --khaki-light: #efe9cf;
+  --khaki-pale: #fbf8ec; --khaki-ink: #2b2710; --khaki-ink-soft: #4a4324;
+  --chrome-icon: #4a4324;
+  --strip-ink: var(--khaki-ink); --strip-hover: rgba(0, 0, 0, .08);
+  --dirt-deep: #f2ecd4; --dirt-mid: #e3d9ae; --dirt-bubble: #efe7c6; --dirt-user: #d8c054;
+  --dirt-pale: #ffffff; --dirt-ink: #2c2606; --dirt-line: #cdc08a; --dirt-soft: #6b6134;
+  --dirt-fg: #2e2616;
+}
+:root[data-theme="sepia"] {
+  --bg: #efe5d2; --bg2: #f8f1e3; --bg3: #e4d7bd; --fg: #2e2616; --muted: #6f6450;
+  --khaki-dark: #a8935f; --khaki: #bda873; --khaki-mid: #cdba8c; --khaki-light: #e5d8b6;
+  --khaki-pale: #f8f1e3; --khaki-ink: #2e2616; --khaki-ink-soft: #4d422b;
+  --chrome-icon: #4d422b;
+  --strip-ink: var(--khaki-ink); --strip-hover: rgba(0, 0, 0, .08);
+  --dirt-deep: #e8dabb; --dirt-mid: #d6c398; --dirt-bubble: #e3d3ab; --dirt-user: #cdae55;
+  --dirt-pale: #fdf8ec; --dirt-ink: #2e2616; --dirt-line: #c0ab7d; --dirt-soft: #6f6450;
+  --dirt-fg: #2e2616;
+}
+:root[data-theme="contrast"] {
+  --bg: #000000; --bg2: #0a0a0a; --bg3: #1a1a1a; --fg: #ffffff; --muted: #cfcfcf;
+  --jeep: #ff2d2d; --accent: #ff5555; --ok: #00ff6a; --warn: #ffcc00;
+  --khaki-dark: #000000; --khaki: #1a1a1a; --khaki-mid: #262626; --khaki-light: #e6e6e6;
+  --khaki-pale: #ffffff; --khaki-ink: #000000; --khaki-ink-soft: #ffffff;
+  --chrome-icon: #ffffff;
+  --dirt-deep: #000000; --dirt-mid: #1a1a1a; --dirt-bubble: #262626; --dirt-user: #ffcc00;
+  --dirt-pale: #ffffff; --dirt-ink: #000000; --dirt-line: #ffffff; --dirt-soft: #ffffff;
+  --dirt-fg: #ffffff; --accent-ink: #000000;
+}
+
+/* ===================================================================
+   Browser colors
+   A second, independent axis from Theme. Theme says how LIGHT or DARK
+   the window is; the color says which HUE the chrome wears - the tab
+   strip, the address bar band, the buttons, the bookmark bar.
+
+   Each color is written twice, because a light neutral and a dark
+   neutral are two different palettes, not one of them dimmed. The
+   second
+   block is picked by [data-lightui], an attribute the renderer sets
+   when the chosen theme is a light one; CSS cannot work that out for
+   itself from the theme name.
+
+   Every block is also matched on .sw, the swatch in Settings, so one
+   definition paints both the browser and its own preview chip and the
+   two can never drift apart.
+
+   Not here, deliberately:
+     - web pages, which keep their own colors
+     - High contrast, which re-asserts itself below: it exists to be
+       legible, and tinting it would be working against the person who
+       chose it.
+   =================================================================== */
+
+/* The default. Only ever on a swatch - on :root it would override the
+   theme it is supposed to be following, so the renderer leaves the
+   attribute off entirely for this one. */
+.sw[data-chrome="khaki"] {
+  --khaki-dark: #6f6638; --khaki: #8a7d4a; --khaki-mid: #a2935a;
+  --khaki-light: #c7bb86; --khaki-pale: #e8e0c2;
+  --khaki-ink: #2b2710; --khaki-ink-soft: #4a4324;
+  --jeep: #dc2626;
+}
+
+/* ---- Cool Gray ---- */
+:root[data-chrome="coolgray"], .sw[data-chrome="coolgray"] {
+  --khaki-dark: #1b1c1e; --khaki: #26272a; --khaki-mid: #313235;
+  --khaki-light: #9aa0a6; --khaki-pale: #e8eaed;
+  --khaki-ink: #1f2023; --khaki-ink-soft: #c6cacd;
+  --jeep: #1a73e8; --accent-ink: #ffffff;
+  --bm-bg: #26272a; --bm-fg: #dadce0; --bm-line: #3c4043; --bm-hover: rgba(255,255,255,.1);
+}
+:root[data-lightui][data-chrome="coolgray"], [data-lightui] .sw[data-chrome="coolgray"] {
+  --khaki-dark: #d2d5d9; --khaki: #e3e6ea; --khaki-mid: #f1f3f4;
+  --khaki-light: #ffffff; --khaki-pale: #ffffff;
+  --khaki-ink: #202124; --khaki-ink-soft: #3c4043;
+  --strip-ink: #202124; --strip-hover: rgba(0,0,0,.08);
+  --bm-bg: #ffffff; --bm-fg: #3c4043; --bm-line: #dadce0; --bm-hover: rgba(60,64,67,.08);
+}
+
+/* ---- Azure ---- */
+:root[data-chrome="azure"], .sw[data-chrome="azure"] {
+  --khaki-dark: #0f2546; --khaki: #143158; --khaki-mid: #1a3d6b;
+  --khaki-light: #8ab4f8; --khaki-pale: #e8f0fe;
+  --khaki-ink: #0b1f3a; --khaki-ink-soft: #b8cdeb;
+  --jeep: #1a73e8; --accent-ink: #ffffff;
+  --bm-bg: #143158; --bm-fg: #d7e3f7; --bm-line: #22477a; --bm-hover: rgba(255,255,255,.1);
+}
+:root[data-lightui][data-chrome="azure"], [data-lightui] .sw[data-chrome="azure"] {
+  --khaki-dark: #a8c7f0; --khaki: #c2d9f7; --khaki-mid: #d7e6fb;
+  --khaki-light: #eff5ff; --khaki-pale: #ffffff;
+  --khaki-ink: #0b1f3a; --khaki-ink-soft: #1c3c66;
+  --strip-ink: #0b1f3a; --strip-hover: rgba(0,0,0,.08);
+  --bm-bg: #ffffff; --bm-fg: #1c3c66; --bm-line: #c2d9f7; --bm-hover: rgba(26,115,232,.1);
+}
+
+/* ---- Steel Blue ---- */
+:root[data-chrome="steelblue"], .sw[data-chrome="steelblue"] {
+  --khaki-dark: #15191d; --khaki: #212830; --khaki-mid: #2b333c;
+  --khaki-light: #7fb3dd; --khaki-pale: #e9f1f8;
+  --khaki-ink: #10161b; --khaki-ink-soft: #c0ccd8;
+  --jeep: #0f6cbd; --accent-ink: #ffffff;
+  --bm-bg: #212830; --bm-fg: #d4dde6; --bm-line: #333d47; --bm-hover: rgba(255,255,255,.1);
+}
+:root[data-lightui][data-chrome="steelblue"], [data-lightui] .sw[data-chrome="steelblue"] {
+  --khaki-dark: #c3ced9; --khaki: #dbe3ea; --khaki-mid: #eaeff4;
+  --khaki-light: #ffffff; --khaki-pale: #ffffff;
+  --khaki-ink: #12304a; --khaki-ink-soft: #2a4d6b;
+  --strip-ink: #12304a; --strip-hover: rgba(0,0,0,.08);
+  --bm-bg: #ffffff; --bm-fg: #2a4d6b; --bm-line: #d5dee6; --bm-hover: rgba(15,108,189,.1);
+}
+
+/* ---- Crimson ---- */
+:root[data-chrome="crimson"], .sw[data-chrome="crimson"] {
+  --khaki-dark: #171717; --khaki: #232323; --khaki-mid: #2e2e2e;
+  --khaki-light: #b9b9b9; --khaki-pale: #f2f2f2;
+  --khaki-ink: #1a1a1a; --khaki-ink-soft: #c9c9c9;
+  --jeep: #d81324; --accent-ink: #ffffff;
+  --bm-bg: #232323; --bm-fg: #d9d9d9; --bm-line: #383838; --bm-hover: rgba(255,255,255,.1);
+}
+:root[data-lightui][data-chrome="crimson"], [data-lightui] .sw[data-chrome="crimson"] {
+  --khaki-dark: #d6d0d0; --khaki: #e8e3e3; --khaki-mid: #f4f0f0;
+  --khaki-light: #ffffff; --khaki-pale: #ffffff;
+  --khaki-ink: #231616; --khaki-ink-soft: #4a3636;
+  --strip-ink: #231616; --strip-hover: rgba(0,0,0,.08);
+  --bm-bg: #ffffff; --bm-fg: #4a3636; --bm-line: #e2dada; --bm-hover: rgba(216,19,36,.09);
+}
+
+/* ---- Burnt Orange ---- */
+:root[data-chrome="burntorange"], .sw[data-chrome="burntorange"] {
+  --khaki-dark: #17181c; --khaki: #212328; --khaki-mid: #2c2f36;
+  --khaki-light: #e8a384; --khaki-pale: #fdeee7;
+  --khaki-ink: #2a1a12; --khaki-ink-soft: #ccc6c2;
+  --jeep: #d6340f; --accent-ink: #ffffff;
+  --bm-bg: #212328; --bm-fg: #ded8d4; --bm-line: #343840; --bm-hover: rgba(255,255,255,.1);
+}
+:root[data-lightui][data-chrome="burntorange"], [data-lightui] .sw[data-chrome="burntorange"] {
+  --khaki-dark: #e0c6ba; --khaki: #f0ded5; --khaki-mid: #f9ece6;
+  --khaki-light: #ffffff; --khaki-pale: #ffffff;
+  --khaki-ink: #2a1a12; --khaki-ink-soft: #5c3b2a;
+  --strip-ink: #2a1a12; --strip-hover: rgba(0,0,0,.08);
+  --bm-bg: #ffffff; --bm-fg: #5c3b2a; --bm-line: #eedcd3; --bm-hover: rgba(226,60,23,.1);
+}
+
+/* ---- Violet ---- */
+:root[data-chrome="violet"], .sw[data-chrome="violet"] {
+  --khaki-dark: #1c1b22; --khaki: #2b2a33; --khaki-mid: #38374a;
+  --khaki-light: #b49cf5; --khaki-pale: #efe9ff;
+  --khaki-ink: #1c1526; --khaki-ink-soft: #cfc9dd;
+  --jeep: #7a3df0; --accent-ink: #ffffff;
+  --bm-bg: #2b2a33; --bm-fg: #d7d2e0; --bm-line: #3c3a48; --bm-hover: rgba(255,255,255,.1);
+}
+:root[data-lightui][data-chrome="violet"], [data-lightui] .sw[data-chrome="violet"] {
+  --khaki-dark: #cfc2ec; --khaki: #e2d9f6; --khaki-mid: #efe9fc;
+  --khaki-light: #ffffff; --khaki-pale: #ffffff;
+  --khaki-ink: #1c1526; --khaki-ink-soft: #3f2c66;
+  --strip-ink: #1c1526; --strip-hover: rgba(0,0,0,.08);
+  --bm-bg: #ffffff; --bm-fg: #3f2c66; --bm-line: #e4dcf5; --bm-hover: rgba(122,61,240,.1);
+}
+
+/* ---- Silver ---- */
+:root[data-chrome="silver"], .sw[data-chrome="silver"] {
+  --khaki-dark: #1d1d1f; --khaki: #2a2a2c; --khaki-mid: #363638;
+  --khaki-light: #a9a9ad; --khaki-pale: #f2f2f4;
+  --khaki-ink: #1d1d1f; --khaki-ink-soft: #c7c7cc;
+  --jeep: #0a6cff; --accent-ink: #ffffff;
+  --bm-bg: #2a2a2c; --bm-fg: #d8d8dc; --bm-line: #3a3a3c; --bm-hover: rgba(255,255,255,.1);
+}
+:root[data-lightui][data-chrome="silver"], [data-lightui] .sw[data-chrome="silver"] {
+  --khaki-dark: #cfcfd4; --khaki: #e3e3e7; --khaki-mid: #f0f0f3;
+  --khaki-light: #ffffff; --khaki-pale: #ffffff;
+  --khaki-ink: #1d1d1f; --khaki-ink-soft: #3a3a3c;
+  --strip-ink: #1d1d1f; --strip-hover: rgba(0,0,0,.08);
+  --bm-bg: #ffffff; --bm-fg: #3a3a3c; --bm-line: #dcdce0; --bm-hover: rgba(0,0,0,.07);
+}
+
+/* ---- Forest Green ---- */
+:root[data-chrome="forest"], .sw[data-chrome="forest"] {
+  --khaki-dark: #10241a; --khaki: #183325; --khaki-mid: #1f4330;
+  --khaki-light: #8fd3ab; --khaki-pale: #e6f6ec;
+  --khaki-ink: #0c1f14; --khaki-ink-soft: #b4d6c2;
+  --jeep: #1b7a46; --accent-ink: #ffffff;
+  --bm-bg: #183325; --bm-fg: #cfe6d8; --bm-line: #24503a; --bm-hover: rgba(255,255,255,.1);
+}
+:root[data-lightui][data-chrome="forest"], [data-lightui] .sw[data-chrome="forest"] {
+  --khaki-dark: #b2d4bf; --khaki: #cde6d6; --khaki-mid: #e3f2e9;
+  --khaki-light: #ffffff; --khaki-pale: #ffffff;
+  --khaki-ink: #0c1f14; --khaki-ink-soft: #1f4a31;
+  --strip-ink: #0c1f14; --strip-hover: rgba(0,0,0,.08);
+  --bm-bg: #ffffff; --bm-fg: #1f4a31; --bm-line: #d5e9dd; --bm-hover: rgba(27,122,70,.1);
+}
+
+/* ---- Plum ---- */
+:root[data-chrome="plum"], .sw[data-chrome="plum"] {
+  --khaki-dark: #21141f; --khaki: #2f1d2c; --khaki-mid: #3d2639;
+  --khaki-light: #d49cc8; --khaki-pale: #f8e9f4;
+  --khaki-ink: #21141f; --khaki-ink-soft: #d3c0cd;
+  --jeep: #a3307f; --accent-ink: #ffffff;
+  --bm-bg: #2f1d2c; --bm-fg: #e2d2dd; --bm-line: #42283c; --bm-hover: rgba(255,255,255,.1);
+}
+:root[data-lightui][data-chrome="plum"], [data-lightui] .sw[data-chrome="plum"] {
+  --khaki-dark: #dcbcd3; --khaki: #eed6e7; --khaki-mid: #f7e9f3;
+  --khaki-light: #ffffff; --khaki-pale: #ffffff;
+  --khaki-ink: #21141f; --khaki-ink-soft: #572349;
+  --strip-ink: #21141f; --strip-hover: rgba(0,0,0,.08);
+  --bm-bg: #ffffff; --bm-fg: #572349; --bm-line: #eedbe8; --bm-hover: rgba(163,48,127,.1);
+}
+
+/* ---- Carbon: neutral near-black, and the one color that keeps Jeep red ---- */
+:root[data-chrome="carbon"], .sw[data-chrome="carbon"] {
+  --khaki-dark: #0c0c0d; --khaki: #161618; --khaki-mid: #202023;
+  --khaki-light: #a0a0a6; --khaki-pale: #ededf0;
+  --khaki-ink: #0c0c0d; --khaki-ink-soft: #b9b9c0;
+  --jeep: #dc2626; --accent-ink: #ffffff;
+  --bm-bg: #161618; --bm-fg: #d4d4d8; --bm-line: #2a2a2e; --bm-hover: rgba(255,255,255,.1);
+}
+:root[data-lightui][data-chrome="carbon"], [data-lightui] .sw[data-chrome="carbon"] {
+  --khaki-dark: #c9c9ce; --khaki: #e0e0e4; --khaki-mid: #efeff2;
+  --khaki-light: #ffffff; --khaki-pale: #ffffff;
+  --khaki-ink: #18181b; --khaki-ink-soft: #3f3f46;
+  --strip-ink: #18181b; --strip-hover: rgba(0,0,0,.08);
+  --bm-bg: #ffffff; --bm-fg: #3f3f46; --bm-line: #e4e4e7; --bm-hover: rgba(0,0,0,.07);
+}
+
+/* ---- The Yuzal panel, when "tint the panel to match" is on ----
+   One mapping for every color instead of one per color: the panel's
+   own shades line up with the chrome's, so it can be expressed as a
+   rename rather than a second set of hexes to keep in step. The tint
+   is its own attribute so the checkbox can switch it off without the
+   cascade having to unpick what the color already set. */
+/* The lit Ai goes bright wherever the nav row is dark. */
+:root[data-theme="midnight"], :root[data-theme="slate"],
+:root[data-theme="contrast"] { --ai-lit: #ff6b6b; }
+:root[data-chrome]:not([data-lightui]) { --ai-lit: #ff6b6b; }
+
+:root[data-chrome] { --chrome-icon: var(--khaki-pale); }
+:root[data-lightui][data-chrome] { --chrome-icon: var(--khaki-ink); }
+
+:root[data-tint] {
+  --dirt: var(--jeep);
+  --dirt-deep: var(--khaki-dark);
+  --dirt-mid: var(--khaki);
+  --dirt-bubble: var(--khaki-mid);
+  --dirt-user: var(--khaki-light);
+  --dirt-pale: var(--khaki-pale);
+  --dirt-ink: var(--khaki-ink);
+  --dirt-line: var(--khaki-dark);
+  --dirt-fg: var(--khaki-pale);
+  --dirt-soft: var(--khaki-ink-soft);
+}
+/* Light palettes run out of room at the pale end - --khaki-light and
+   --khaki-pale are both near white - so the panel is built from the
+   other end of the ramp, and the user's bubble is a wash of the accent
+   rather than another shade of gray. */
+:root[data-lightui][data-tint] {
+  --dirt-deep: var(--khaki-mid);
+  --dirt-mid: var(--khaki-dark);
+  --dirt-bubble: var(--khaki);
+  --dirt-user: color-mix(in srgb, var(--jeep) 20%, #ffffff);
+  --dirt-fg: var(--khaki-ink);
+}
+
+/* High contrast wins over any color, by saying so rather than by
+   luck of source order. */
+:root[data-theme="contrast"][data-chrome] {
+  --khaki-dark: #000000; --khaki: #1a1a1a; --khaki-mid: #262626;
+  --khaki-light: #e6e6e6; --khaki-pale: #ffffff;
+  --khaki-ink: #000000; --khaki-ink-soft: #ffffff;
+  --jeep: #ff2d2d; --accent-ink: #000000;
+  --chrome-icon: #ffffff;
+  --strip-ink: #ffffff; --strip-hover: rgba(255,255,255,.3);
+  --bm-bg: #000000; --bm-fg: #ffffff; --bm-line: #ffffff; --bm-hover: rgba(255,255,255,.25);
+}
+:root[data-theme="contrast"][data-tint] {
+  --dirt: #ffcc00;
+  --dirt-deep: #000000; --dirt-mid: #1a1a1a; --dirt-bubble: #262626;
+  --dirt-user: #ffcc00; --dirt-pale: #ffffff; --dirt-ink: #000000;
+  --dirt-line: #ffffff; --dirt-fg: #ffffff; --dirt-soft: #ffffff;
+}
+
+/* Compact density: the same layout, tightened. Only paddings and the two
+   fixed heights change, so nothing reflows unexpectedly. */
+:root[data-density="compact"] { --toolbar-h: 100px; }
+:root[data-density="compact"] #enginebar { padding: 3px 8px; }
+:root[data-density="compact"] #composer { padding: 6px 8px; }
+:root[data-density="compact"] .bubble { padding: 5px 8px; margin: 3px 0; }
+
+
+/* ===================================================================
+   Engine bar: Model / Effort / Safety, laid out like eJeep's
+   =================================================================== */
+#enginebar { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+#enginebar .erow { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+/* Model takes a whole row of its own, pushing Effort and the read-only box
+   onto the next one. It has to: with the strength, price and speed meters
+   beside the name, the longest entry needs 243px and sharing the row left
+   157px, which silently clipped 13 of 16 models. A select gives no hint
+   that it has cut something off. */
+#enginebar .erow[for="engine"] { flex: 1 1 100%; }
+#enginebar .erow[for="effort"] { flex: 0 1 92px; }
+#enginebar #ro-wrap { flex: 0 0 auto; }
+#enginebar .elab {
+  font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--dirt-soft); opacity: .85;
+}
+#enginebar select { width: 100%; min-width: 0; }
+#enginebar .eval {
+  display: flex; align-items: center; gap: 4px; font-size: 11px;
+  color: var(--dirt-pale); padding-bottom: 3px; white-space: nowrap;
+}
+#enginebar .eval input { margin: 0; accent-color: var(--jeep); }
+/* Read-only is the safe state, so it reads as calm rather than alarming. The
+   warning color is reserved for when it is OFF and the agent can act. */
+#ro-wrap:has(#readonly:not(:checked)) .elab { color: var(--warn); opacity: 1; }
+
+/* ---- dragging the prompt box taller by its top edge ---- */
+
+/* The composer sits at the bottom of the panel, so its height grows upwards.
+   The handle therefore belongs on the top edge: you pull it the way the box
+   actually moves. The native corner grip is gone - with a bottom-anchored
+   box it asks you to drag down in order to grow up. */
+#input-grip {
+  height: 11px;
+  margin: -11px -12px 3px;      /* sit on the composer's own top border */
+  cursor: ns-resize;
+  display: flex; align-items: center; justify-content: center;
+}
+/* A short bar, the way every resizable pane marks its edge. Faint until the
+   pointer is near it. */
+#input-grip::before {
+  content: ""; display: block; width: 36px; height: 3px; border-radius: 2px;
+  background: var(--dirt-line); opacity: .7; transition: opacity .12s, background .12s;
+}
+#input-grip:hover::before, body.row-resizing #input-grip::before {
+  background: var(--dirt); opacity: 1;
+}
+
+body.row-resizing { cursor: ns-resize; user-select: none; }
+body.row-resizing * { cursor: ns-resize !important; }
+
+/* The corner grip is replaced by the bar above. */
+#input { resize: none; }
+
+/* ---- Jib only ----
+   Chromium's side panel can be narrower than Jeep's dialogs were wide, so a
+   dialog is never wider than the panel. */
+.modal { max-width: calc(100vw - 24px); }
+#panel { height: 100vh; }
+/* Shown in the chat when the backend is not answering: how to start it. */
+.bubble.note code { font-family: ui-monospace, monospace; font-size: 11px; }

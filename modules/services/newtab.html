@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>New Tab</title>
+  <link rel="stylesheet" href="newtab.css">
+  <script type="module" src="newtab.js"></script>
+</head>
+<body>
+  <!-- TizCat's New Tab page, laid out as Brave's: the picture fills the page,
+       the clock at the top, search and shortcuts in the middle, the picture's
+       credit at the bottom left, TizCat Rewards at the bottom right. -->
+  <div id="background" class="background"></div>
+
+  <header class="top">
+    <time id="clock" class="clock"></time>
+  </header>
+
+  <main class="middle">
+    <form id="search" class="search" role="search">
+      <input id="search-box" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Search the web" aria-label="Search the web">
+    </form>
+    <nav id="shortcuts" class="shortcuts" aria-label="Shortcuts"></nav>
+  </main>
+
+  <footer class="bottom">
+    <div id="credit" class="credit"></div>
+    <section id="rewards" class="rewards" aria-label="TizCat Rewards" hidden>
+      <div class="rewards-title">TizCat Rewards</div>
+      <div id="rewards-text" class="rewards-text"></div>
+      <div class="rewards-actions">
+        <button id="rewards-on" type="button" hidden>Turn on</button>
+        <a id="rewards-account" href="https://tizcat.com/go/account" hidden>Log in to keep your points</a>
+      </div>
+    </section>
+  </footer>
+</body>
+</html>

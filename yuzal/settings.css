@@ -1,0 +1,102 @@
+/* Ai settings, as a page of its own. panel.css (loaded first) brings the
+   colours and themes; the window rules below are Jeep's settings window
+   (renderer/ui.css), and only the page around it is new. */
+html, body { background: var(--bg); overflow: auto; height: auto; min-height: 100vh; }
+body { display: flex; justify-content: center; align-items: flex-start; padding: 32px 16px; }
+.modal.setwin { position: relative; height: auto; min-height: 520px; max-height: none; }
+.setwin-body { min-height: 440px; }
+.setwin {
+  width: 720px; max-width: 94vw; height: 560px; max-height: 88vh;
+  display: flex; flex-direction: column; padding: 0; overflow: hidden;
+}
+.setwin-head {
+  padding: 10px 14px; font-weight: 600; font-size: 14px;
+  background: var(--bg3); border-bottom: 1px solid var(--bg3);
+  display: flex; align-items: center; gap: 8px;
+}
+.setwin-logo { width: 22px; height: 22px; }
+.setwin-body { display: flex; flex: 1; min-height: 0; }
+.settabs {
+  width: 168px; flex: 0 0 168px; padding: 8px 6px; overflow-y: auto;
+  background: var(--bg); border-right: 1px solid var(--bg3);
+}
+.settab {
+  display: block; width: 100%; text-align: left; margin-bottom: 2px;
+  padding: 8px 10px; border: 0; border-radius: 6px; cursor: pointer;
+  background: transparent; color: var(--fg); font-size: 12.5px;
+}
+.settab:hover { background: var(--bg3); }
+.settab.on { background: var(--jeep); color: #fff; }
+/* An entry that goes somewhere instead of showing a page of settings. Set
+   apart by a rule above it, because clicking it closes this window - which
+   is not what the entries above it do. */
+.settab-act {
+  margin-top: 8px; padding-top: 12px;
+  border-top: 1px solid var(--bg3); border-radius: 0 0 6px 6px;
+}
+/* The bottom padding keeps a pane's last row clear of the Cancel/Done footer,
+   which floats over the scroll area - without it the last button on a long
+   pane (History) sits half-hidden behind it. */
+.setpanes { flex: 1; min-width: 0; overflow-y: auto; padding: 14px 18px 28px; }
+.setpane h3 { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; }
+.srow {
+  display: flex; align-items: center; gap: 10px; margin: 10px 0;
+  font-size: 12.5px; color: var(--fg);
+}
+.srow > select, .srow > input[type="text"], .srow > input[type="number"],
+.srow > input[type="password"] {
+  margin-left: auto; min-width: 160px;
+}
+/* A module page's fields: wide enough for an address or a key. */
+.modpage .srow > input[type="text"], .modpage .srow > input[type="password"] { min-width: 260px; }
+.srow > input[type="range"] { margin-left: auto; width: 150px; accent-color: var(--jeep); }
+.sval { font-size: 11.5px; color: var(--muted); min-width: 44px; }
+.scheck {
+  display: flex; align-items: center; gap: 8px; margin: 10px 0;
+  font-size: 12.5px; cursor: pointer;
+}
+.scheck input { accent-color: var(--jeep); }
+.shint { font-size: 11px; line-height: 1.5; color: var(--muted); margin: 4px 0 12px; }
+.shint code { background: var(--bg3); padding: 1px 4px; border-radius: 3px; }
+.srowbtns { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
+.setwin-foot {
+  display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+  background: var(--bg3); border-top: 1px solid var(--bg3);
+}
+.setwin-foot .grow { flex: 1; }
+.abtn {
+  background: var(--bg3); color: var(--fg); border: 1px solid var(--bg3);
+  border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 12px;
+}
+.abtn:hover { border-color: var(--muted); }
+.abtn.primary { background: var(--jeep); border-color: var(--jeep); color: #fff; }
+.abtn.danger { color: var(--accent); }
+.abtn:disabled { opacity: .55; cursor: default; }
+.setwin select, .setwin input[type="text"], .setwin input[type="number"],
+.setwin input[type="password"] {
+  background: var(--bg); color: var(--fg); border: 1px solid var(--bg3);
+  border-radius: 6px; padding: 5px 8px; font-size: 12px;
+}
+.setwin select:focus, .setwin input:focus { border-color: var(--jeep); outline: none; }
+.setwin #set-mic, .setwin #set-voice { width: 100%; }
+.setwin .set-row { display: flex; gap: 8px; align-items: center; }
+.bmempty { font-size: 12px; color: var(--muted); padding: 10px 0; }
+.memlist { margin-top: 10px; }
+.memrow {
+  display: flex; align-items: flex-start; gap: 8px; padding: 7px 9px;
+  background: var(--bg); border: 1px solid var(--bg3); border-radius: 7px;
+  margin-bottom: 5px; font-size: 12px;
+}
+.memkind {
+  flex: 0 0 auto; font-size: 10px; padding: 2px 6px; border-radius: 10px;
+  background: var(--bg3); color: var(--muted); white-space: nowrap;
+}
+/* A fact is permanent, a note is dated and expires. The chip carries the word
+   or the date, so the distinction survives being printed in gray. */
+.memkind.fact { color: var(--ok); }
+.memtext { flex: 1; line-height: 1.45; word-break: break-word; }
+.memrow .abtn { padding: 2px 7px; flex: 0 0 auto; }
+#set-meter { height: 10px; background: var(--bg3); border-radius: 5px; overflow: hidden; margin-top: 4px; }
+#set-meter-fill { height: 100%; width: 0%; background: var(--ok); transition: width .05s linear; }
+/* Saved, said beside the buttons rather than in a dialog. */
+#s-saved { font-size: 12px; color: var(--ok); }

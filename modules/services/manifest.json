@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "TizCat Services",
+  "version": "0.2.0",
+  "description": "TizCat's New Tab page, TizCat Rewards, and your TizCat account and sync in the browser.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAulR0lFt155RmFO35pehcPmey3oxhDqXiJu5PU/h4JPjrG7c5ZsDpKwxetlv4ZowsKvuALCSnTvUk3LZ5F3765T5+kxSb3p0lh+Odext7fk7VV48Zyq+2+qntRuSKkaWtwV3VaCCVcQrID/YFUzX0UBDiYBswjwkaYAn+XGyq6WQTnCzBcNZ5arXvAQV5UE8yMKq5HQ7gBtzQjox426rm5KicTyky3599hU1h/oK8nBiZ6ERrOZK/V5aCdFw/H1OikvHRUucXeTlNOr1YI6gNowgLV/7Pj/3/4KE/wSPOCGAWD3sqXS3e5T3zg5lByUAfx7WUXTNfpxjcKeBA4coASQIDAQAB",
+  "minimum_chrome_version": "120",
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications",
+    "idle",
+    "topSites",
+    "search",
+    "favicon",
+    "bookmarks",
+    "settingsPrivate",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "https://api.tizcat.com/*"
+  ],
+  "background": {
+    "service_worker": "sw.js",
+    "type": "module"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "action": {
+    "default_title": "TizCat Rewards",
+    "default_popup": "rewards.html",
+    "default_icon": {
+      "16": "icons/icon_16.png",
+      "24": "icons/icon_24.png",
+      "32": "icons/icon_32.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon_16.png",
+    "32": "icons/icon_32.png",
+    "48": "icons/icon_48.png",
+    "128": "icons/icon_128.png"
+  },
+  "externally_connectable": {
+    "matches": ["https://account.tizcat.com/*"]
+  }
+}

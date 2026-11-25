@@ -1,0 +1,27 @@
+// tizcat-api: the one front door for TizCat Services, at api.tizcat.com.
+// It routes /v1/<part>/... to that part's Worker over a service binding
+// (no extra requests counted, no internet hop), checks device tokens for the
+// parts that need them, and answers /v1/health and /v1/config itself.
+// Deploy: servers\scripts\deploy.ps1 api (after the parts it binds to).
+{
+  "$schema": "https://unpkg.com/wrangler@4.157.0/config-schema.json",
+  "name": "tizcat-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-18",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "api.tizcat.com", "custom_domain": true }
+  ],
+  "services": [
+    { "binding": "ACCOUNT", "service": "tizcat-account" },
+    { "binding": "ADS", "service": "tizcat-ads" },
+    { "binding": "REWARDS", "service": "tizcat-rewards" },
+    { "binding": "WALLET", "service": "tizcat-wallet" },
+    { "binding": "SYNC", "service": "tizcat-sync" }
+  ],
+  "kv_namespaces": [
+    { "binding": "CONFIG", "id": "95adc45d9019496786dd8681f45e33fc" }
+  ],
+  "observability": { "enabled": true }
+}

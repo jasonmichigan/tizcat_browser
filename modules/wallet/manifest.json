@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "JibWallet",
+  "version": "0.1.0",
+  "description": "TizCat's own wallet. For now a placeholder: its toolbar button and panel, before JibWallet itself is built.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAun2+MzJW0Sqi2W7FUhy9rqWJu7tFuEx0vpEPTx9FtHGJT03sQiHos73tGYXkg3H/H93FxJ37usAf55vSRptI1MBHpQg1OXF4lPZs+07ANvvHF5QJdSDVfjhOazfuP/SwpWPm96kY6RMb5kYSORxJRo/2ymkP1ruMVt6fq1YsaSsnn8ooeHZV7+M2iL84TX6BjaX/cbD06yyyOMimvwVxhzm4ol+jNi6wmG5CZVe1PZFMhlfYax1qqNEtKfIVTzL6qmLTEQAeHXu06sbKNPHde9VJVqAlhW9r5FHWqFObiv/VAFD5aB1QCJlfZoi+o+j1B3+kZm5EfpOomn16jXtCQQIDAQAB",
+  "minimum_chrome_version": "120",
+  "action": {
+    "default_title": "JibWallet",
+    "default_popup": "panel.html",
+    "default_icon": {
+      "16": "icons/icon_16.png",
+      "24": "icons/icon_24.png",
+      "32": "icons/icon_32.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon_16.png",
+    "32": "icons/icon_32.png",
+    "48": "icons/icon_48.png",
+    "128": "icons/icon_128.png"
+  }
+}

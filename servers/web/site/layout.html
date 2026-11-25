@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <meta name="description" content="{{description}}">
+  <meta name="theme-color" content="#1c2b4a">
+  <link rel="canonical" href="https://www.tizcat.com{{path}}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TizCat">
+  <meta property="og:title" content="{{title}}">
+  <meta property="og:description" content="{{description}}">
+  <meta property="og:url" content="https://www.tizcat.com{{path}}">
+  <meta property="og:image" content="https://www.tizcat.com/img/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/img/favicon.png">
+  <link rel="apple-touch-icon" href="/img/logo-512.png">
+  <link rel="stylesheet" href="/css/site.css?v={{assetVersion}}">
+  <script src="/js/site.js?v={{assetVersion}}"></script>
+</head>
+<body class="page-{{name}}">
+  <!-- The layout every page shares. Its {{...}} parts are filled in by the
+       web server (servers\web\src\index.js) from site.json and the page. -->
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="TizCat home">
+        <img src="/img/logo-64.png?v={{assetVersion}}" width="34" height="34" alt="">
+        <span>TizCat</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+        <span class="menu-toggle-bar"></span><span class="visually-hidden">Menu</span>
+      </button>
+      <div class="header-menu" id="site-menu">
+        <nav class="menu" aria-label="Main">{{menu}}</nav>
+        <div class="header-actions">
+          <a class="btn btn-ghost btn-small" href="https://account.tizcat.com/">Account</a>
+          <a class="btn btn-gold btn-small" href="/download">Get TizCat</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+{{content}}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a class="brand" href="/">
+            <img src="/img/logo-64.png?v={{assetVersion}}" width="34" height="34" alt="">
+            <span>TizCat</span>
+          </a>
+          <p>The fast browser with an AI agent that keeps your secrets at home.</p>
+        </div>
+        <div class="footer-columns">{{footer}}</div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 TizCat. All rights reserved.</span>
+        <span>Tiz means fast.</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

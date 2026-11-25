@@ -1,0 +1,154 @@
+diff --git a/chrome/browser/extensions/component_loader.cc b/chrome/browser/extensions/component_loader.cc
+index 77bc6f3..efb7137 100644
+--- a/chrome/browser/extensions/component_loader.cc
++++ b/chrome/browser/extensions/component_loader.cc
+@@ -10,6 +10,7 @@
+ 
+ #include "base/command_line.h"
+ #include "base/feature_list.h"
++#include "base/files/file_enumerator.h"
+ #include "base/files/file_util.h"
+ #include "base/functional/bind.h"
+ #include "base/functional/callback.h"
+@@ -565,6 +566,49 @@ void ComponentLoader::FinishAddJibYuzal(
+     Add(std::move(*manifest), root, /*skip_allowlist=*/true);
+   }
+ }
++
++// Jib: TizCat's modules (TizCat Services, and later JibWallet and others)
++// are built in like Yuzal: each folder in <exe dir>\modules that holds a
++// manifest is loaded as a component extension. run.ps1 copies them there from
++// tizcat\modules on every start, so a module changes, or a new one arrives,
++// without TizCat being recompiled. The key in each manifest fixes its ID.
++void ComponentLoader::AddJibModules() {
++  base::FilePath exe_dir;
++  if (!base::PathService::Get(base::DIR_EXE, &exe_dir)) {
++    return;
++  }
++  GetExtensionFileTaskRunner()->PostTaskAndReplyWithResult(
++      FROM_HERE,
++      base::BindOnce(
++          [](const base::FilePath& modules) {
++            std::vector<std::pair<base::FilePath, base::DictValue>> found;
++            base::FileEnumerator folders(modules, /*recursive=*/false,
++                                         base::FileEnumerator::DIRECTORIES);
++            for (base::FilePath root = folders.Next(); !root.empty();
++                 root = folders.Next()) {
++              std::string error;
++              std::optional<base::DictValue> manifest =
++                  file_util::LoadManifest(root, &error);
++              if (!manifest) {
++                LOG(WARNING) << "Jib: module not loaded from " << root << ": "
++                             << error;
++                continue;
++              }
++              found.emplace_back(root, std::move(*manifest));
++            }
++            return found;
++          },
++          exe_dir.AppendASCII("modules")),
++      base::BindOnce(&ComponentLoader::FinishAddJibModules,
++                     weak_factory_.GetWeakPtr()));
++}
++
++void ComponentLoader::FinishAddJibModules(
++    std::vector<std::pair<base::FilePath, base::DictValue>> modules) {
++  for (auto& [root, manifest] : modules) {
++    Add(std::move(manifest), root, /*skip_allowlist=*/true);
++  }
++}
+ #endif  // !BUILDFLAG(IS_CHROMEOS)
+ 
+ void ComponentLoader::AddNetworkSpeechSynthesisExtension() {
+@@ -834,6 +878,7 @@ void ComponentLoader::AddDefaultComponentExtensionsWithBackgroundPages(
+ #if !BUILDFLAG(IS_CHROMEOS)
+   if (!skip_session_components) {
+     AddJibYuzal();
++    AddJibModules();
+   }
+ #endif  // !BUILDFLAG(IS_CHROMEOS)
+ 
+diff --git a/chrome/browser/extensions/component_loader.h b/chrome/browser/extensions/component_loader.h
+index f1e5fe9..bfe9974 100644
+--- a/chrome/browser/extensions/component_loader.h
++++ b/chrome/browser/extensions/component_loader.h
+@@ -10,6 +10,7 @@
+ #include <optional>
+ #include <string>
+ #include <string_view>
++#include <utility>
+ #include <vector>
+ 
+ #include "base/files/file_path.h"
+@@ -240,6 +241,12 @@ class ComponentLoader : public KeyedService {
+   void AddJibYuzal();
+   void FinishAddJibYuzal(const base::FilePath& root,
+                           std::optional<base::DictValue> manifest);
++
++  // Jib: TizCat's modules, built in the same way from <exe dir>\modules, one
++  // folder each, so a new module needs no rebuild.
++  void AddJibModules();
++  void FinishAddJibModules(
++      std::vector<std::pair<base::FilePath, base::DictValue>> modules);
+ #endif  // !BUILDFLAG(IS_CHROMEOS)
+ 
+   void AddGlicExtension();
+diff --git a/chrome/browser/ui/toolbar/toolbar_actions_model.cc b/chrome/browser/ui/toolbar/toolbar_actions_model.cc
+index 0536936..2d58477 100644
+--- a/chrome/browser/ui/toolbar/toolbar_actions_model.cc
++++ b/chrome/browser/ui/toolbar/toolbar_actions_model.cc
+@@ -9,6 +9,8 @@
+ #include <string>
+ #include <vector>
+ 
++#include "base/base_paths.h"
++#include "base/files/file_path.h"
+ #include "base/functional/bind.h"
+ #include "base/json/values_util.h"
+ #include "base/location.h"
+@@ -17,6 +19,7 @@
+ #include "base/numerics/safe_conversions.h"
+ #include "base/observer_list.h"
+ #include "base/one_shot_event.h"
++#include "base/path_service.h"
+ #include "base/strings/utf_string_conversions.h"
+ #include "base/task/single_thread_task_runner.h"
+ #include "chrome/browser/extensions/extension_management.h"
+@@ -62,6 +65,19 @@ enum class DefaultPinnedExtensionState {
+   kMaxValue = kUnpinned,
+ };
+ 
++// Jib: whether `extension` is one of TizCat's modules, built in from
++// <exe dir>\modules by ComponentLoader::AddJibModules (patch 0007).
++bool IsJibModule(const extensions::Extension& extension) {
++  if (extension.location() != extensions::mojom::ManifestLocation::kComponent) {
++    return false;
++  }
++  base::FilePath exe_dir;
++  return base::PathService::Get(base::DIR_EXE, &exe_dir) &&
++         base::FilePath::CompareEqualIgnoreCase(
++             extension.path().DirName().value(),
++             exe_dir.AppendASCII("modules").value());
++}
++
+ }  // namespace
+ 
+ ToolbarActionsModel::ToolbarActionsModel(
+@@ -134,9 +150,15 @@ void ToolbarActionsModel::OnExtensionInstalled(
+       extension_management->GetToolbarPinMode(extension->id());
+   extensions::ManagementPolicy* policy =
+       extensions::ExtensionSystem::Get(profile_)->management_policy();
++  // Jib: TizCat's modules are built in, so Chromium counts them as managed
++  // and would leave their buttons in the extensions menu. As Brave shows its
++  // wallet button, they are pinned when they first arrive in a profile (if
++  // pinning new extensions is on); the person can unpin them, and an update
++  // does not pin them again (`is_update` above).
+   const bool is_enterprise_extension =
+-      policy && (!policy->UserMayModifySettings(extension, nullptr) ||
+-                 policy->MustRemainInstalled(extension, nullptr));
++      !IsJibModule(*extension) && policy &&
++      (!policy->UserMayModifySettings(extension, nullptr) ||
++       policy->MustRemainInstalled(extension, nullptr));
+ 
+   auto* sync_service = ExtensionSyncService::Get(profile_);
+   const bool is_installed_from_sync =

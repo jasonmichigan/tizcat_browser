@@ -1,0 +1,105 @@
+diff --git a/chrome/browser/extensions/component_loader.h b/chrome/browser/extensions/component_loader.h
+index 0a47e6a..c974b7c 100644
+--- a/chrome/browser/extensions/component_loader.h
++++ b/chrome/browser/extensions/component_loader.h
+@@ -235,6 +235,13 @@ class ComponentLoader : public KeyedService {
+ 
+   void AddAimEligibilityExtension();
+ 
++#if !BUILDFLAG(IS_CHROMEOS)
++  // Jib: Yuzal, Jib's assistant, built in from <exe dir>\yuzal.
++  void AddJibYuzal();
++  void FinishAddJibYuzal(const base::FilePath& root,
++                          std::optional<base::DictValue> manifest);
++#endif  // !BUILDFLAG(IS_CHROMEOS)
++
+   void AddGlicExtension();
+ 
+   void AddContextualTasksExtension();
+diff --git a/chrome/browser/extensions/component_loader.cc b/chrome/browser/extensions/component_loader.cc
+index afe6eac..bdb8841 100644
+--- a/chrome/browser/extensions/component_loader.cc
++++ b/chrome/browser/extensions/component_loader.cc
+@@ -528,6 +528,45 @@ void ComponentLoader::AddHangoutServicesExtension() {
+ }
+ #endif  // BUILDFLAG(ENABLE_HANGOUT_SERVICES_EXTENSION)
+ 
++#if !BUILDFLAG(IS_CHROMEOS)
++// Jib: Yuzal, Jib's assistant, is built in the way the PDF viewer is, but
++// her files sit beside the browser (<exe dir>\yuzal) instead of in its
++// resources, so she can change without Jib being recompiled. The key in her
++// manifest gives her the same ID wherever she is loaded from. Read off the
++// UI thread, like every other component extension loaded from a folder.
++void ComponentLoader::AddJibYuzal() {
++  base::FilePath exe_dir;
++  if (!base::PathService::Get(base::DIR_EXE, &exe_dir)) {
++    return;
++  }
++  const base::FilePath root = exe_dir.AppendASCII("yuzal");
++  GetExtensionFileTaskRunner()->PostTaskAndReplyWithResult(
++      FROM_HERE,
++      base::BindOnce(
++          [](const base::FilePath& root) -> std::optional<base::DictValue> {
++            std::string error;
++            std::optional<base::DictValue> manifest =
++                file_util::LoadManifest(root, &error);
++            if (!manifest) {
++              LOG(WARNING) << "Jib: Yuzal not loaded from " << root << ": "
++                           << error;
++            }
++            return manifest;
++          },
++          root),
++      base::BindOnce(&ComponentLoader::FinishAddJibYuzal,
++                     weak_factory_.GetWeakPtr(), root));
++}
++
++void ComponentLoader::FinishAddJibYuzal(
++    const base::FilePath& root,
++    std::optional<base::DictValue> manifest) {
++  if (manifest) {
++    Add(std::move(*manifest), root, /*skip_allowlist=*/true);
++  }
++}
++#endif  // !BUILDFLAG(IS_CHROMEOS)
++
+ void ComponentLoader::AddNetworkSpeechSynthesisExtension() {
+   if (::features::IsExtensionManifestV3NetworkSpeechSynthesisEnabled()) {
+     Add(IDR_NETWORK_SPEECH_SYNTHESIS_MANIFEST_MV3,
+@@ -792,6 +831,12 @@ void ComponentLoader::AddDefaultComponentExtensionsWithBackgroundPages(
+   AddGlicExtension();
+   AddContextualTasksExtension();
+ 
++#if !BUILDFLAG(IS_CHROMEOS)
++  if (!skip_session_components) {
++    AddJibYuzal();
++  }
++#endif  // !BUILDFLAG(IS_CHROMEOS)
++
+ // http://crbug.com/41070702
+ #if BUILDFLAG(GOOGLE_CHROME_BRANDING) && !BUILDFLAG(IS_CHROMEOS)
+   AddNetworkSpeechSynthesisExtension();
+diff --git a/chrome/browser/extensions/api/debugger/debugger_api.cc b/chrome/browser/extensions/api/debugger/debugger_api.cc
+index 2045d72..a05b637 100644
+--- a/chrome/browser/extensions/api/debugger/debugger_api.cc
++++ b/chrome/browser/extensions/api/debugger/debugger_api.cc
+@@ -600,10 +600,18 @@ bool ExtensionDevToolsClientHost::Attach() {
+ 
+   // We allow policy-installed extensions to circumvent the normal
+   // infobar warning. See crbug.com/41302695.
++  //
++  // Jib: and Yuzal, Jib's own assistant, when she is the copy built into
++  // Jib. Both are checked: anyone can give an unpacked extension her ID by
++  // copying the key from her manifest, but only Jib itself loads a
++  // component extension.
++  const bool is_jib_yuzal =
++      extension_->location() == mojom::ManifestLocation::kComponent &&
++      extension_->id() == "djfdkjchianaecdfdcafangjiggdlhon";
+   const bool suppress_warning =
+       base::CommandLine::ForCurrentProcess()->HasSwitch(
+           ::switches::kSilentDebuggerExtensionAPI) ||
+-      Manifest::IsPolicyLocation(extension_->location());
++      Manifest::IsPolicyLocation(extension_->location()) || is_jib_yuzal;
+ 
+   if (!suppress_warning) {
+ #if BUILDFLAG(IS_ANDROID)

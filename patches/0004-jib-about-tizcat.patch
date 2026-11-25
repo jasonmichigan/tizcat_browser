@@ -1,0 +1,59 @@
+diff --git a/chrome/app/settings_strings.grdp b/chrome/app/settings_strings.grdp
+index 20ab26dea7..e4f71945c8 100644
+--- a/chrome/app/settings_strings.grdp
++++ b/chrome/app/settings_strings.grdp
+@@ -43,6 +43,10 @@
+     <message name="IDS_SETTINGS_ABOUT_PAGE_BROWSER_VERSION" desc="The text label describing the version of the browser, example: Version 57.0.2937.0-r123456 (Developer Build) unknown (64-bit). The suffix of the version (eg. '-r123456') exists only in limited cases.)">
+       Version <ph name="PRODUCT_VERSION">$1<ex>15.0.865.0</ex></ph><ph name="PRODUCT_VERSION_SUFFIX">$2<ex>-r123456</ex></ph>  (<ph name="PRODUCT_CHANNEL">$3<ex>Developer Build</ex></ph>) <ph name="PRODUCT_MODIFIER">$4</ph> <ph name="PRODUCT_VERSION_BITS">$5</ph>
+     </message>
++    <!-- Jib: TizCat's own words about its name. -->
++    <message name="IDS_SETTINGS_ABOUT_PAGE_PRODUCT_STORY" desc="A paragraph on the About page explaining where the browser's name, TizCat, comes from." translateable="false">
++      The name TizCat comes from the Persian word tiz, meaning sharp and quick, and from the cheetah, the fastest animal on land. Like its namesake, TizCat is quick, alert, and ready to move. Whether you’re researching, working, or just exploring, TizCat helps you move through the web with speed and focus.
++    </message>
+     <message name="IDS_SETTINGS_ABOUT_PAGE_LEARN_MORE_UPDATE_ERRORS" desc="The accessibility label for a 'Learn more' link next to an error message about how an update has failed.">
+       Learn more about fixing update errors
+     </message>
+diff --git a/chrome/browser/resources/settings/about_page/about_page.css b/chrome/browser/resources/settings/about_page/about_page.css
+index 2987e61a89..8a6ac32b4a 100644
+--- a/chrome/browser/resources/settings/about_page/about_page.css
++++ b/chrome/browser/resources/settings/about_page/about_page.css
+@@ -32,6 +32,11 @@
+   margin-inline-end: var(--about-page-image-space);
+ }
+ 
++/* Jib: the paragraph about TizCat's name reads as prose, not as a label. */
++#productStory .cr-padded-text {
++  line-height: 1.5;
++}
++
+ .icon-container {
+   margin-inline-end: var(--about-page-image-space);
+   min-width: 32px;  /* The width of the product-logo img. */
+diff --git a/chrome/browser/resources/settings/about_page/about_page.html.ts b/chrome/browser/resources/settings/about_page/about_page.html.ts
+index b9ac4e634f..1beae12145 100644
+--- a/chrome/browser/resources/settings/about_page/about_page.html.ts
++++ b/chrome/browser/resources/settings/about_page/about_page.html.ts
+@@ -67,6 +67,10 @@ export function getHtml(this: SettingsAboutPageElement) {
+     </span>
+ </if>
+   </div>
++  <!-- Jib: where the name TizCat comes from. -->
++  <div class="cr-row" id="productStory">
++    <div class="cr-padded-text">$i18n{aboutProductStory}</div>
++  </div>
+ <if expr="_google_chrome and is_macosx">
+   ${!this.promoteUpdaterStatus_.hidden ? html`
+     <div id="promoteUpdater"
+diff --git a/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc b/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
+index 2513850319..39ca56af36 100644
+--- a/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
++++ b/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
+@@ -325,6 +325,8 @@ void AddAboutStrings(content::WebUIDataSource* html_source, Profile* profile) {
+       {"aboutGetHelpUsingChrome", IDS_SETTINGS_GET_HELP_USING_CHROME},
+       {"aboutPageTitle", IDS_SETTINGS_ABOUT_PROGRAM},
+       {"aboutProductTitle", IDS_PRODUCT_NAME},
++      // Jib: where the name TizCat comes from.
++      {"aboutProductStory", IDS_SETTINGS_ABOUT_PAGE_PRODUCT_STORY},
+       {"aboutLearnMoreUpdatingErrors",
+        IDS_SETTINGS_ABOUT_PAGE_LEARN_MORE_UPDATE_ERRORS},
+       {"aboutLearnMoreSystemRequirements",

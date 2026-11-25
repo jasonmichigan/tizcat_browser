@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Yuzal</title>
+  <link rel="stylesheet" href="panel.css" />
+</head>
+<body>
+  <!-- Jeep's Yuzal panel (renderer/index.html), now Chromium's side panel.
+       The panel-width grip is gone: Chromium's side panel has its own. -->
+  <aside id="panel">
+    <div id="panelhead">
+      <img class="logo ai-mark" src="icons/ai_48.png" alt="" aria-hidden="true">
+      <span class="brand">Yuzal</span>
+      <span id="lang-badge" class="badge">EN</span>
+      <span id="sched-clock" class="sched-clock hidden" title="Scheduled task running"></span>
+      <span id="backend-light" class="light" title="Backend status">●</span>
+      <button id="btn-clear" class="panelbtn" title="Clear this conversation">🧹</button>
+      <!-- Chat history. In Jeep it sat in the Ai settings window, which was an
+           overlay of this same window; in Jib that window is a separate tab,
+           and a past chat has to open here, so it has its own button. -->
+      <button id="btn-threads" class="panelbtn" title="Chat history">🕘</button>
+      <button id="btn-aiset" class="panelbtn panelbtn-icon"
+              title="Ai settings" aria-label="Ai settings">
+        <svg class="aiset-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path class="tracks" d="M3.4 6.4h12.2M3.4 17.6h8.2M3.4 12h5.4M16.6 12h4"/>
+          <circle class="knob" cx="18.6" cy="6.4" r="2.1"/>
+          <circle class="knob" cx="14.6" cy="17.6" r="2.1"/>
+          <path class="spark" d="M12.9 8.4Q12.9 10.8 16.5 12Q14.1 12 12.9 15.6Q12.9 13.2 9.3 12Q11.7 12 12.9 8.4Z"/>
+        </svg>
+      </button>
+    </div>
+    <div id="enginebar">
+      <label class="erow" for="engine">
+        <span class="elab">Model</span>
+        <select id="engine" title="Engine: who answers">
+          <option value="claude|fast">Efficient (Claude)</option>
+          <option value="claude|strong">Full Claude (opus + vision)</option>
+          <option value="local-ai|efficient">Efficient local (Ollama, fast)</option>
+          <option value="local-ai|fast">Full local (Ollama)</option>
+        </select>
+      </label>
+      <label class="erow" for="effort">
+        <span class="elab">Effort</span>
+        <select id="effort" title="How hard the model thinks before answering">
+          <option value="">default</option>
+        </select>
+      </label>
+      <label class="erow" id="ro-wrap"
+             title="Read-only: Yuzal may look at and read pages, but every action that could change one is refused.">
+        <span class="elab">Safety</span>
+        <span class="eval"><input type="checkbox" id="readonly" /> read-only</span>
+      </label>
+    </div>
+
+    <!-- Shown only when Yuzal is on a tab other than the one you are
+         looking at. -->
+    <div id="agent-tab-bar" class="hidden">
+      <span class="atb-dot" aria-hidden="true"></span>
+      <span class="atb-text"></span>
+      <button id="btn-agent-move" class="atb-move"
+              title="Move Yuzal to the tab you are looking at">Move here</button>
+    </div>
+
+    <div id="chat"></div>
+
+    <div id="voicebar" class="hidden">
+      <span class="vb-mic">🎤</span>
+      <select id="mic-device" title="Microphone input"></select>
+      <div id="mic-meter" title="Microphone input level"><div id="mic-meter-fill"></div></div>
+    </div>
+
+    <div id="status">
+      <span id="status-text"></span>
+      <span id="status-timer" class="hidden" aria-live="off"></span>
+    </div>
+
+    <div id="composer">
+      <div id="input-grip" role="separator" aria-orientation="horizontal"
+           title="Drag up to make the prompt box taller. Double-click to reset."></div>
+      <div id="attachments"></div>
+      <textarea id="input" rows="2"
+                placeholder="Ask Yuzal, or tell it what to do on this page…"></textarea>
+      <input type="file" id="file-input" multiple style="display:none"
+             accept=".pdf,.docx,.pptx,.xlsx,.xls,.csv,.txt,.md,.py,.r,.java,.json,.jsonl,.xml,.yaml,.yml,.js,.ts,.html,.htm,.ipynb,.png,.jpg,.jpeg,.gif,.bmp,.webp,.tif,.tiff" />
+      <div id="composer-btns">
+        <button id="btn-send" class="primary">Send</button>
+        <button id="btn-voice" class="toggle" title="Voice: talk or type, and Yuzal speaks back. Off = text only.">🎤 Voice</button>
+        <button id="btn-attach" title="Attach files (PDF, Word, Excel, CSV, text, code…) to ask about them">📎</button>
+        <button id="btn-snap" title="Full-page screenshot → PDF">📸</button>
+        <button id="btn-stop" title="Stop (also stops talking)">■</button>
+      </div>
+    </div>
+  </aside>
+
+  <script type="module" src="panel.js"></script>
+</body>
+</html>

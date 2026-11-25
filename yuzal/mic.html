@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Yuzal: microphone</title>
+  <link rel="stylesheet" href="panel.css" />
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+  <!-- Chromium's side panel cannot show the "allow microphone?" question, so
+       Yuzal asks once, here, in a tab of its own. Chromium then remembers
+       the answer for Yuzal, side panel included. -->
+  <div class="modal" style="width:420px">
+    <div class="modal-msg">Let Yuzal hear you</div>
+    <p class="shint" id="mic-msg">For Voice, Yuzal needs the microphone. Chromium will ask you
+      once; after that the panel can listen whenever Voice is on.</p>
+    <div class="modal-btns"><button class="primary" id="mic-allow">Allow the microphone</button></div>
+  </div>
+  <script src="mic.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+// tizcat-web: www.tizcat.com (and tizcat.com, which sends visitors to www).
+// The pages are files in .\site (see site\site.json for how they fit);
+// /go/<name> links, which TizCat itself opens (Settings, account row), lead
+// where config.json "go" says, so they change without a rebuild of TizCat.
+// Deploy: servers\scripts\deploy.ps1 web
+{
+  "$schema": "https://unpkg.com/wrangler@4.157.0/config-schema.json",
+  "name": "tizcat-web",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-18",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "www.tizcat.com", "custom_domain": true },
+    { "pattern": "tizcat.com", "custom_domain": true }
+  ],
+  "assets": {
+    "directory": "./site",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "kv_namespaces": [
+    { "binding": "CONFIG", "id": "95adc45d9019496786dd8681f45e33fc" }
+  ],
+  "observability": { "enabled": true }
+}

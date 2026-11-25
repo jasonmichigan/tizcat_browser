@@ -1,0 +1,24 @@
+// tizcat-rewards: TizCat Rewards' points ledger. No address of its own:
+// reached only through api.tizcat.com (/v1/rewards/...) and by tizcat-ads,
+// over service bindings.
+// Deploy: servers\scripts\deploy.ps1 rewards
+{
+  "$schema": "https://unpkg.com/wrangler@4.157.0/config-schema.json",
+  "name": "tizcat-rewards",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-18",
+  "workers_dev": false,
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tizcat-rewards",
+      "database_id": "d2fb143e-e1bf-4079-9ccd-dccef83fae29",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    { "binding": "CONFIG", "id": "95adc45d9019496786dd8681f45e33fc" }
+  ],
+  "observability": { "enabled": true }
+}

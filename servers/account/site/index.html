@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TizCat account</title>
+  <meta name="description" content="Log in to your TizCat account, or create one, to sync TizCat and for TizCat Rewards and JibWallet.">
+  <link rel="icon" href="/img/favicon.png">
+  <link rel="stylesheet" href="/css/account.css">
+  <script type="module" src="/js/account.js"></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="https://www.tizcat.com/">
+      <img src="/img/logo-64.png" width="32" height="32" alt="">
+      <span>TizCat</span>
+    </a>
+  </header>
+
+  <main>
+    <!-- Shown while the page finds out whether you are logged in. -->
+    <section id="view-wait" class="card">
+      <p class="muted">One moment...</p>
+    </section>
+
+    <section id="view-login" class="card" hidden>
+      <h1>Log in to TizCat</h1>
+      <p id="login-notice" class="note" role="status" hidden></p>
+      <form id="login-form" novalidate>
+        <label>Email<input name="email" type="email" autocomplete="username" required></label>
+        <label>Password
+          <span class="password-box">
+            <input name="password" type="password" autocomplete="current-password" required>
+            <button type="button" class="show-password secondary" aria-label="Show password">Show</button>
+          </span>
+        </label>
+        <p class="forgot"><a href="#forgot">Forgot your password?</a></p>
+        <div class="turnstile" hidden></div>
+        <p class="message" role="alert"></p>
+        <button id="resend-button" type="button" class="secondary" hidden>Send the confirmation link again</button>
+        <button type="submit">Log in</button>
+      </form>
+      <p class="switch">New to TizCat? <a href="#signup">Create an account</a></p>
+    </section>
+
+    <section id="view-signup" class="card" hidden>
+      <h1>Create your TizCat account</h1>
+      <p class="muted">Sync your bookmarks and settings between your TizCat browsers, and use TizCat Rewards and JibWallet.</p>
+      <form id="signup-form" novalidate>
+        <label>Email<input name="email" type="email" autocomplete="username" required></label>
+        <label>Password <span class="hint">(at least 10 characters)</span>
+          <span class="password-box">
+            <input name="password" type="password" autocomplete="new-password" minlength="10" required>
+            <button type="button" class="show-password secondary" aria-label="Show password">Show</button>
+          </span>
+        </label>
+        <label>Confirm password<input name="password2" type="password" autocomplete="new-password" required></label>
+        <label class="check"><input name="agree" type="checkbox" required>
+          <span>I agree to TizCat's <a href="https://www.tizcat.com/terms" target="_blank" rel="noopener">Terms of Service</a>
+          and <a href="https://www.tizcat.com/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
+        <p class="hint small">Your password also locks what TizCat syncs, so not even TizCat can read it.
+          If you forget it, you can reset it, but the synced copy is then cleared and uploaded again from your TizCat browsers.</p>
+        <div class="turnstile" hidden></div>
+        <p class="message" role="alert"></p>
+        <button type="submit">Create account</button>
+      </form>
+      <p class="switch">Already have an account? <a href="#login">Log in</a></p>
+    </section>
+
+    <section id="view-check-email" class="card" hidden>
+      <h1>Check your email</h1>
+      <p>We sent a link to <strong id="check-email-address"></strong>.
+        Open it to activate your TizCat account.</p>
+      <p class="muted">The link works for 48 hours. If you do not see the email in a few minutes, look in your spam or junk folder.</p>
+      <p class="message" role="alert"></p>
+      <div class="actions">
+        <button id="check-resend" type="button" class="secondary">Send it again</button>
+        <a class="button-link" href="#login">Back to log in</a>
+      </div>
+    </section>
+
+    <section id="view-forgot" class="card" hidden>
+      <h1>Reset your password</h1>
+      <p class="muted">Enter your account's email address and we will send you a link to choose a new password.</p>
+      <form id="forgot-form" novalidate>
+        <label>Email<input name="email" type="email" autocomplete="username" required></label>
+        <p class="message" role="alert"></p>
+        <button type="submit">Send me a link</button>
+      </form>
+      <p class="switch"><a href="#login">Back to log in</a></p>
+    </section>
+
+    <section id="view-reset" class="card" hidden>
+      <h1>Choose a new password</h1>
+      <p class="note">Your synced data is locked with your old password, so a reset clears the copy on
+        TizCat's servers and signs out your TizCat browsers. They keep your bookmarks and settings and
+        upload them again when you sign in to them with the new password.</p>
+      <form id="reset-form" novalidate>
+        <label>Email<input name="email" type="email" autocomplete="username" required></label>
+        <label>New password <span class="hint">(at least 10 characters)</span>
+          <span class="password-box">
+            <input name="password" type="password" autocomplete="new-password" minlength="10" required>
+            <button type="button" class="show-password secondary" aria-label="Show password">Show</button>
+          </span>
+        </label>
+        <label>Confirm new password<input name="password2" type="password" autocomplete="new-password" required></label>
+        <p class="message" role="alert"></p>
+        <button type="submit">Save new password</button>
+      </form>
+    </section>
+
+    <section id="view-account" class="card wide" hidden>
+      <h1>Your TizCat account</h1>
+      <p><span class="muted">Logged in as</span> <strong id="account-email"></strong></p>
+
+      <h2>Sync in this browser</h2>
+      <div id="sync-box">
+        <p id="sync-status" class="muted">Checking for TizCat...</p>
+        <p id="sync-about" class="hint small" hidden>Your bookmarks, settings and TizCat's own data (TizCat Rewards
+          choices, JibWallet) are saved to your account, encrypted with your password so only you can read them,
+          and come back when you sign in to TizCat on another computer.</p>
+        <form id="sync-unlock" class="inline" novalidate hidden>
+          <label>Your password, to turn on sync
+            <input name="password" type="password" autocomplete="current-password" required></label>
+        </form>
+        <div class="actions tight">
+          <button id="sync-on" type="button" hidden>Turn on sync</button>
+          <button id="sync-open" type="button" class="secondary" hidden>Sync settings</button>
+          <button id="sync-off" type="button" class="secondary" hidden>Sign out of this TizCat</button>
+        </div>
+        <p id="sync-message" class="message" role="alert"></p>
+      </div>
+
+      <h2>Your synced data</h2>
+      <ul id="synced-list" class="devices"></ul>
+      <button id="synced-clear" type="button" class="danger small-button" hidden>Delete synced data from TizCat's servers</button>
+
+      <h2>Signed-in TizCat browsers</h2>
+      <ul id="device-list" class="devices"></ul>
+
+      <h2>Password</h2>
+      <button id="password-open" type="button" class="secondary">Change password</button>
+      <form id="password-form" novalidate hidden>
+        <label>Current password<input name="current" type="password" autocomplete="current-password" required></label>
+        <label>New password <span class="hint">(at least 10 characters)</span>
+          <input name="password" type="password" autocomplete="new-password" minlength="10" required></label>
+        <label>Confirm new password<input name="password2" type="password" autocomplete="new-password" required></label>
+        <p class="message" role="alert"></p>
+        <div class="actions tight">
+          <button type="submit">Save new password</button>
+          <button type="button" class="secondary cancel">Cancel</button>
+        </div>
+      </form>
+
+      <h2>Rewards and JibWallet</h2>
+      <p class="muted">TizCat Rewards are kept as points for now.
+        <a href="https://www.tizcat.com/wallet">JibWallet</a> is coming.</p>
+
+      <div class="actions">
+        <button id="logout-button" type="button" class="secondary">Log out</button>
+        <button id="delete-open" type="button" class="danger">Delete my account</button>
+      </div>
+      <form id="delete-form" novalidate hidden>
+        <p class="note">Deleting your account also deletes your synced data and your TizCat Rewards points.
+          This cannot be undone. Your TizCat browsers keep what they have.</p>
+        <label>Your password<input name="password" type="password" autocomplete="current-password" required></label>
+        <p class="message" role="alert"></p>
+        <div class="actions tight">
+          <button type="submit" class="danger">Delete my account for good</button>
+          <button type="button" class="secondary cancel">Cancel</button>
+        </div>
+      </form>
+      <p id="account-message" class="message" role="alert"></p>
+    </section>
+  </main>
+
+  <footer class="bottom">
+    <a href="https://www.tizcat.com/privacy">Privacy</a>
+    <a href="https://www.tizcat.com/terms">Terms</a>
+    <a href="https://www.tizcat.com/help">Help</a>
+  </footer>
+</body>
+</html>

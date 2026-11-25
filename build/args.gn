@@ -1,0 +1,35 @@
+# TizCat's build settings, copied to C:\tizcat\src\out\Release\args.gn by build.ps1.
+
+# A release build, as small and fast to link as a local machine allows.
+is_debug = false
+is_component_build = false
+symbol_level = 0
+blink_symbol_level = 0
+v8_symbol_level = 0
+
+# Not an official Google build: no Chrome branding, no Google-only profiles.
+is_official_build = false
+
+# Chromium's developer checks (DCHECKs) off, as in Chrome and Brave (the
+# user's choice, 2026-11-20: "fast and reliable"). A non-official build has
+# them on by default, and a failing one closes the whole browser: on
+# 2026-11-19 one closed TizCat at the end of every import from Chrome. Off,
+# TizCat carries on as Chrome would, runs faster and is smaller; TizCat's
+# tests (tests\) catch mistakes instead. Changing this rebuilds everything.
+dcheck_always_on = false
+
+# Speed (Tiz is Persian for fast): profile-guided optimization with the
+# profile Google builds Chrome itself with, for this exact Chromium version
+# (chrome\build\pgo_profiles, fetched by fetch-chromium.ps1 with
+# checkout_pgo_profiles; named in chrome\build\win64.pgo.txt). It lays out
+# and inlines the code the way real browsing uses it. Chrome's other speed
+# step, ThinLTO, is left off: linking with it needs far more memory than
+# this laptop has free.
+chrome_pgo_phase = 2
+
+# Play the video and audio formats sites use (H.264, AAC), as Chrome does.
+proprietary_codecs = true
+ffmpeg_branding = "Chrome"
+
+# Built on this laptop only.
+use_remoteexec = false

@@ -1,0 +1,56 @@
+// tizcat-account: the TizCat account website (account.tizcat.com) and the
+// account part of the API (/v1/account/..., also reached through
+// api.tizcat.com). Other servers call it over a service binding (RPC:
+// resolveDevice, health), never over the internet.
+// Deploy: servers\scripts\deploy.ps1 account
+{
+  "$schema": "https://unpkg.com/wrangler@4.157.0/config-schema.json",
+  "name": "tizcat-account",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-18",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "account.tizcat.com", "custom_domain": true }
+  ],
+  "assets": {
+    "directory": "./site",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "drop-trailing-slash"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tizcat-accounts",
+      "database_id": "0e689b4f-549e-497d-815a-656b012c8df9",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    { "binding": "CONFIG", "id": "95adc45d9019496786dd8681f45e33fc" }
+  ],
+  // Deleting an account also deletes its Rewards points (RPC forget()) and
+  // its synced data (SYNC.wipe(), also on a password reset).
+  "services": [
+    { "binding": "REWARDS", "service": "tizcat-rewards" },
+    { "binding": "SYNC", "service": "tizcat-sync" }
+  ],
+  // Account emails when config.json "email.provider" is "cloudflare" (free
+  // plan: only to addresses verified in Email Routing). See shared\mailer.js.
+  "send_email": [
+    { "name": "EMAIL" }
+  ],
+  // At most 10 log-in tries a minute for one address from one place, and
+  // 5 emails asked for a minute from one place.
+  "ratelimits": [
+    { "name": "LOGIN_LIMITER", "namespace_id": "4101", "simple": { "limit": 10, "period": 60 } },
+    { "name": "EMAIL_LIMITER", "namespace_id": "4102", "simple": { "limit": 5, "period": 60 } }
+  ],
+  // Secrets (set with deploy.ps1 secrets, never written here):
+  //   PASSWORD_PEPPER   keyed into every password verifier
+  //   TEST_SECRET       lets the tests use @test.tizcat.com addresses
+  //   RESEND_API_KEY or BREVO_API_KEY  when that provider sends the emails
+  //   TURNSTILE_SECRET  only once Turnstile is switched on in config.json
+  "observability": { "enabled": true }
+}

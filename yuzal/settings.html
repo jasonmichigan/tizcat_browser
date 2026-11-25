@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Ai settings</title>
+  <link rel="stylesheet" href="panel.css" />
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+  <!-- Jeep's "Ai settings" window (the AI, Voice and Memory tabs of
+       openSettings("ai") in renderer/ui.js), as a page. Chat history moved
+       to the 🕘 button in the panel, where a past chat opens. -->
+  <div class="modal setwin">
+    <div class="setwin-head"><img class="setwin-logo" src="icons/ai_48.png" alt="" aria-hidden="true"><span>Ai settings</span></div>
+    <div class="setwin-body">
+      <div class="settabs">
+        <button class="settab on" data-tab="ai">🤖 AI</button>
+        <button class="settab" data-tab="voice">🎤 Voice</button>
+        <button class="settab" data-tab="memory">🧠 Memory</button>
+      </div>
+      <div class="setpanes">
+        <section class="setpane" data-pane="ai">
+          <h3>AI</h3>
+          <label class="srow">Engine at startup<select id="s-engine"></select></label>
+          <label class="srow">Effort<select id="s-effort">
+            <option value="">default (each model decides)</option>
+            <option value="low">low</option>
+            <option value="medium">medium</option>
+            <option value="high">high</option>
+            <option value="xhigh">xhigh</option>
+            <option value="max">max</option>
+          </select></label>
+          <p class="shint">Claude takes all five levels. A model on this PC has one
+            dial: anything above <b>low</b> turns its thinking on, which is two to
+            three times slower, and a model with no thinking mode is left alone.
+            <b>default</b> means no thinking for a local model: it is the setting
+            most of the waiting used to come from.</p>
+          <label class="srow">Maximum steps per request
+            <input type="number" id="s-maxsteps" min="1" max="30" /></label>
+          <p class="shint">One step is: read the page, decide, act. Yuzal stops at this
+            many even if the task is unfinished. It is the backstop against a loop that
+            never ends.</p>
+          <label class="scheck"><input type="checkbox" id="s-nosubmit" />
+            <span>Fill forms, but never press Submit</span></label>
+          <p class="shint">Yuzal may navigate, type, attach files and click through a
+            multi-page form, and then stops at the final button: Submit, Apply Now,
+            Pay. It leaves the form filled and tells you it is ready. Leave this on
+            unless you want it finishing things on your behalf.</p>
+          <label class="scheck"><input type="checkbox" id="s-readonly" />
+            <span>Start in read-only</span></label>
+          <p class="shint">Read-only lets Yuzal open pages, read them and scroll.
+            Every action that could <i>change</i> something (click, type, submit,
+            write a file) is refused, and the refusal is recorded. The check runs
+            where the action is executed, not in the instructions given to the model.</p>
+        </section>
+
+        <section class="setpane hidden" data-pane="voice">
+          <h3>Microphone</h3>
+          <select id="set-mic"></select>
+          <p class="shint">Speak: the bar moves when this microphone hears you.</p>
+          <div id="set-meter"><div id="set-meter-fill"></div></div>
+          <h3 style="margin-top:18px">Yuzal’s voice</h3>
+          <div class="set-row"><select id="set-voice"></select>
+            <button id="set-test" class="abtn primary">▶ Test</button></div>
+          <h3 style="margin-top:18px">Default language</h3>
+          <label class="srow">Replies in<select id="set-lang">
+            <option value="en">English</option>
+            <option value="fa">Persian (فارسی)</option>
+            <option value="es">Spanish (Español)</option></select></label>
+          <label class="scheck"><input type="checkbox" id="s-speak" />
+            <span>Turn Voice on when Yuzal opens</span></label>
+        </section>
+
+        <section class="setpane hidden" data-pane="memory">
+          <h3>What Yuzal remembers between sessions</h3>
+          <p class="shint">The models never learn. Nothing is trained on your browsing,
+            and clearing the chat wipes the conversation. Everything below is simply
+            <i>re-read</i> at the start of every answer, which is why its size matters:
+            it is sent again each time.</p>
+          <label class="scheck"><input type="checkbox" id="s-memon" />
+            <span>Read these before answering</span></label>
+          <label class="scheck"><input type="checkbox" id="s-memauto" />
+            <span>Let Yuzal decide what is worth remembering</span></label>
+          <p class="shint">On, it keeps things you mention in passing (what you
+            are working on, a standing preference, what one of your words refers
+            to) without being asked, and says in one line what it kept. Off, it
+            records only what you explicitly tell it to remember. Either way it
+            never keeps a password, and never keeps what a web page claims about
+            you.</p>
+          <h3 style="margin-top:18px">Layer 1: stable facts</h3>
+          <p class="shint">Things that stay true: which university you are at, that you
+            want answers in metric, what you mean by “the dashboard”. Kept until you
+            remove them.</p>
+          <label class="srow">Storage limit
+            <input type="range" id="s-memfacts" min="2" max="50" step="1" />
+            <span id="s-memfacts-val" class="sval"></span></label>
+          <h3 style="margin-top:18px">Layer 2: dated notes</h3>
+          <p class="shint">Things true of a particular day: “that deadline was 15 Oct”.
+            Recorded with the date, shown to the model as possibly out of date, and
+            discarded automatically after the expiry below.</p>
+          <label class="srow">Storage limit
+            <input type="range" id="s-memnotes" min="5" max="200" step="5" />
+            <span id="s-memnotes-val" class="sval"></span></label>
+          <label class="srow">Discard notes after
+            <input type="range" id="s-memttl" min="7" max="180" step="1" />
+            <span id="s-memttl-val" class="sval"></span></label>
+          <h3 style="margin-top:18px">How much reaches each model</h3>
+          <p class="shint">Storage and delivery are separate. Anything beyond these
+            budgets stays on disk rather than being lost. Cloud models have room to
+            spare; a model running on this PC has a far smaller window, and filling it
+            with memory leaves less for the page it has to read.</p>
+          <label class="srow">Claude and Gemini
+            <input type="range" id="s-memcloud" min="2" max="100" step="2" />
+            <span id="s-memcloud-val" class="sval"></span></label>
+          <label class="srow">Models on this PC
+            <input type="range" id="s-memlocal" min="2" max="40" step="1" />
+            <span id="s-memlocal-val" class="sval"></span></label>
+          <div class="srowbtns">
+            <button class="abtn" id="s-memrefresh">⟳ Show what is stored</button>
+            <button class="abtn danger" id="s-memclear">Forget everything</button>
+            <span id="s-memstatus" class="sval"></span>
+          </div>
+          <div id="s-memlist" class="memlist"></div>
+        </section>
+      </div>
+    </div>
+    <div class="setwin-foot">
+      <span id="s-saved"></span>
+      <span class="grow"></span>
+      <button class="abtn" id="s-cancel">Cancel</button>
+      <button class="abtn primary" id="s-done">Done</button>
+    </div>
+  </div>
+  <script type="module" src="settings.js"></script>
+</body>
+</html>

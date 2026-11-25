@@ -1,0 +1,3 @@
+# Keep every file exactly as it is, line endings included: the patches must
+# match Chromium's files byte for byte, whatever git settings a computer has.
+* -text
